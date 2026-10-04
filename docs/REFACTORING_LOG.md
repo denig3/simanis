@@ -1,6 +1,6 @@
 # Refactoring Log
 
-Log ini mencatat riwayat evolusi kode dan langkah-langkah refactoring yang dilakukan pada proyek **Stokora (Inventory & Order Management)** dari bentuk awal hingga mencapai arsitektur bersih (*Clean Architecture*) saat ini.
+Log ini mencatat riwayat evolusi kode dan langkah-langkah refactoring yang dilakukan pada proyek **SIMANIS (Sistem Manajemen Inventaris & Order)** dari bentuk awal hingga mencapai arsitektur bersih (*Clean Architecture*) saat ini.
 
 ---
 

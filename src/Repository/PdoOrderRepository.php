@@ -440,6 +440,37 @@ final class PdoOrderRepository implements OrderRepositoryInterface
         );
     }
 
+    /** @return list<array{id: int, purchase_order_id: int, product_id: int, sku: string, product_name: string, quantity: int, quantity_received: int, unit_price: float, subtotal: float}> */
+    public function findPurchaseOrderItems(int $purchaseOrderId): array
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT poi.id, poi.purchase_order_id, poi.product_id, p.sku, p.name AS product_name, poi.quantity, poi.quantity_received, poi.unit_price, poi.subtotal
+            FROM purchase_order_items poi
+            JOIN products p ON poi.product_id = p.id
+            WHERE poi.purchase_order_id = ?
+            ORDER BY poi.id ASC
+        ");
+        $stmt->execute([$purchaseOrderId]);
+        /** @var list<array{id: int|string, purchase_order_id: int|string, product_id: int|string, sku: string, product_name: string, quantity: int|string, quantity_received: int|string, unit_price: float|string, subtotal: float|string}> $raw */
+        $raw = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $result = [];
+        foreach ($raw as $item) {
+            $result[] = [
+                'id' => (int) $item['id'],
+                'purchase_order_id' => (int) $item['purchase_order_id'],
+                'product_id' => (int) $item['product_id'],
+                'sku' => (string) $item['sku'],
+                'product_name' => (string) $item['product_name'],
+                'quantity' => (int) $item['quantity'],
+                'quantity_received' => (int) $item['quantity_received'],
+                'unit_price' => (float) $item['unit_price'],
+                'subtotal' => (float) $item['subtotal'],
+            ];
+        }
+        return $result;
+    }
+
     /**
      * @param list<array{product_id: int, quantity: int, unit_price: float}> $items
      */

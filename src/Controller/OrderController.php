@@ -172,6 +172,32 @@ final class OrderController extends BaseController
      * @param array<string, mixed> $input
      * @param array{id: int|string, name?: string, email?: string, role?: string}|null $user
      */
+    public function getPurchaseOrderDetail(array $input, ?array $user): void
+    {
+        if ($user === null) {
+            throw new UnauthorizedException();
+        }
+
+        try {
+            $id = (int) ($input['order_id'] ?? 0);
+            $order = $this->orderService->getPurchaseOrder($id);
+            $items = $this->orderService->getPurchaseOrderItems($id);
+            self::json([
+                'success' => true,
+                'data' => [
+                    'order' => $order->toArray(),
+                    'items' => $items,
+                ],
+            ]);
+        } catch (Throwable $e) {
+            self::handleException($e);
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $input
+     * @param array{id: int|string, name?: string, email?: string, role?: string}|null $user
+     */
     public function createPurchaseOrder(array $input, ?array $user): void
     {
         if ($user === null) {

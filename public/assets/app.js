@@ -1,5 +1,5 @@
 /*
- * STOKORA — Inventory & Order Management System
+ * SIMANIS — Sistem Manajemen Inventaris & Order
  * Frontend Interactive Controller & Role Simulation Engine
  */
 
@@ -10,7 +10,9 @@ const message = document.querySelector('#form-message');
 
 // State Manager Global Prototipe
 const AppState = {
-    currentRole: 'admin', // 'admin' | 'sales' | 'warehouse'
+    // Peran diambil dari sesi login (data-user-role pada <body>); simulasi peran hanya untuk admin
+    realRole: ['admin', 'sales', 'warehouse'].includes(document.body?.dataset.userRole) ? document.body.dataset.userRole : 'admin',
+    currentRole: ['admin', 'sales', 'warehouse'].includes(document.body?.dataset.userRole) ? document.body.dataset.userRole : 'admin', // 'admin' | 'sales' | 'warehouse'
     rolesInfo: {
         admin: { title: 'Admin System', initial: 'A', class: 'badge-purple' },
         sales: { title: 'Sales Staff', initial: 'S', class: 'badge-blue' },
@@ -123,6 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initMasterDataModals();
     initEditMasterModals();
     initSalesOrderModals();
+    initPurchaseOrderModals();
     initExportButtons();
 });
 
@@ -1635,6 +1638,233 @@ function initSalesOrderModals() {
     });
 }
 
+// Inisialisasi Modal Buat Purchase Order Baru & Detail Purchase Order & GR
+function initPurchaseOrderModals() {
+    const modalAdd = document.querySelector('#modal-add-po');
+    const btnOpenAdd = document.querySelector('#btn-create-po');
+    const btnCloseAdd = document.querySelector('#btn-close-add-po');
+    const btnCancelAdd = document.querySelector('#btn-cancel-add-po');
+    const formAdd = document.querySelector('#form-add-po');
+    const errorAdd = document.querySelector('#add-po-error');
+    const btnAddRow = document.querySelector('#btn-add-po-item-row');
+    const tbodyItems = document.querySelector('#po-items-tbody');
+    const grandTotalText = document.querySelector('#po-grand-total-text');
+    const btnSaveDraft = document.querySelector('#btn-save-draft-po');
+
+    const modalDetail = document.querySelector('#modal-detail-po');
+    const btnCloseDetail = document.querySelector('#btn-close-detail-po');
+    const btnCloseDetailAction = document.querySelector('#btn-close-detail-po-action');
+
+    let catalogProducts = [];
+    try {
+        const catalogEl = document.querySelector('#products-catalog-data');
+        if (catalogEl && catalogEl.textContent) {
+            catalogProducts = JSON.parse(catalogEl.textContent);
+        }
+    } catch (e) {
+        console.error('Gagal membaca data katalog produk untuk PO:', e);
+    }
+
+    const updateGrandTotal = () => {
+        let total = 0;
+        tbodyItems?.querySelectorAll('tr').forEach(tr => {
+            const subtotal = parseFloat(tr.dataset.subtotal || '0');
+            total += subtotal;
+        });
+        if (grandTotalText) {
+            grandTotalText.textContent = 'Rp ' + total.toLocaleString('id-ID');
+        }
+    };
+
+    const addItemRow = (productId = '', qty = 10) => {
+        if (!tbodyItems) return;
+        const tr = document.createElement('tr');
+        tr.dataset.subtotal = '0';
+
+        let optionsHtml = '<option value="">-- Pilih Produk --</option>';
+        catalogProducts.forEach(p => {
+            const selected = String(p.id) === String(productId) ? 'selected' : '';
+            const purchasePrice = p.purchase_price || Math.round(p.price * 0.75);
+            optionsHtml += `<option value="${p.id}" data-purchase-price="${purchasePrice}" data-stock="${p.stock}" ${selected}>${escapeHtml(p.name)} (${escapeHtml(p.sku)}) [Stok: ${p.stock}]</option>`;
+        });
+
+        tr.innerHTML = `
+            <td>
+                <select class="input po-item-product" style="width:100%; padding: 8px 12px; font-size:13.5px; border-radius: var(--radius-sm); background:#fff;" required>
+                    ${optionsHtml}
+                </select>
+            </td>
+            <td>
+                <input type="number" class="input po-item-qty" min="1" value="${qty}" style="width:100%; padding: 8px 10px; font-size:13.5px; border-radius: var(--radius-sm); text-align:right;" required>
+            </td>
+            <td>
+                <input type="number" class="input po-item-price" min="0" step="500" value="0" style="width:100%; padding: 8px 10px; font-size:13.5px; border-radius: var(--radius-sm); text-align:right;" required>
+            </td>
+            <td style="text-align:right; font-weight:700; font-size:14px; color:var(--text-primary); padding-right:12px;" class="po-item-subtotal-cell">
+                Rp 0
+            </td>
+            <td style="text-align:center;">
+                <button type="button" class="btn-sm btn-danger btn-remove-row" style="padding: 4px 10px; font-size: 14px; border-radius:4px;" title="Hapus Baris">&times;</button>
+            </td>
+        `;
+
+        const prodSelect = tr.querySelector('.po-item-product');
+        const qtyInput = tr.querySelector('.po-item-qty');
+        const priceInput = tr.querySelector('.po-item-price');
+        const subtotalCell = tr.querySelector('.po-item-subtotal-cell');
+        const btnRemove = tr.querySelector('.btn-remove-row');
+
+        const calcRow = () => {
+            const q = Math.max(1, parseInt(qtyInput.value || '1', 10));
+            const p = Math.max(0, parseFloat(priceInput.value || '0'));
+            const sub = q * p;
+            tr.dataset.subtotal = String(sub);
+            if (subtotalCell) subtotalCell.textContent = 'Rp ' + sub.toLocaleString('id-ID');
+            updateGrandTotal();
+        };
+
+        prodSelect.addEventListener('change', () => {
+            const selectedOpt = prodSelect.options[prodSelect.selectedIndex];
+            const defPrice = parseFloat(selectedOpt?.dataset.purchasePrice || '0');
+            priceInput.value = defPrice;
+            calcRow();
+        });
+
+        qtyInput.addEventListener('input', calcRow);
+        priceInput.addEventListener('input', calcRow);
+
+        btnRemove.addEventListener('click', () => {
+            if (tbodyItems.querySelectorAll('tr').length <= 1) {
+                showToast('⚠️ Pengadaan PO wajib memiliki minimal 1 item produk.');
+                return;
+            }
+            tr.remove();
+            updateGrandTotal();
+        });
+
+        tbodyItems.appendChild(tr);
+        if (productId) {
+            prodSelect.dispatchEvent(new Event('change'));
+        }
+    };
+
+    btnAddRow?.addEventListener('click', () => addItemRow());
+
+    btnOpenAdd?.addEventListener('click', () => {
+        if (AppState.currentRole === 'sales') {
+            showToast('❌ Akses Ditolak: Sales Staff tidak memiliki izin membuat Purchase Order.');
+            return;
+        }
+        formAdd?.reset();
+        if (errorAdd) errorAdd.hidden = true;
+        if (tbodyItems) tbodyItems.innerHTML = '';
+        addItemRow();
+        if (modalAdd) modalAdd.hidden = false;
+        document.body.style.overflow = 'hidden';
+    });
+
+    const closeAddModal = () => {
+        if (modalAdd) modalAdd.hidden = true;
+        document.body.style.overflow = '';
+    };
+
+    btnCloseAdd?.addEventListener('click', closeAddModal);
+    btnCancelAdd?.addEventListener('click', closeAddModal);
+
+    modalAdd?.addEventListener('click', (e) => {
+        if (e.target === modalAdd) closeAddModal();
+    });
+
+    let isOrderingImmediately = true;
+
+    btnSaveDraft?.addEventListener('click', () => {
+        isOrderingImmediately = false;
+        formAdd?.requestSubmit();
+    });
+
+    formAdd?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (errorAdd) errorAdd.hidden = true;
+
+        const supId = parseInt(document.querySelector('#new-po-supplier')?.value || '0', 10);
+        const whId = parseInt(document.querySelector('#new-po-warehouse')?.value || '0', 10);
+        const notes = document.querySelector('#new-po-notes')?.value || '';
+
+        if (!supId) {
+            if (errorAdd) { errorAdd.textContent = 'Pilih Supplier / Pemasok terlebih dahulu.'; errorAdd.hidden = false; }
+            return;
+        }
+        if (!whId) {
+            if (errorAdd) { errorAdd.textContent = 'Pilih Gudang Tujuan Penerimaan terlebih dahulu.'; errorAdd.hidden = false; }
+            return;
+        }
+
+        const items = [];
+        let itemError = null;
+        tbodyItems?.querySelectorAll('tr').forEach(tr => {
+            const prodId = parseInt(tr.querySelector('.po-item-product')?.value || '0', 10);
+            const qty = parseInt(tr.querySelector('.po-item-qty')?.value || '0', 10);
+            const unitPrice = parseFloat(tr.querySelector('.po-item-price')?.value || '0');
+
+            if (!prodId) {
+                itemError = 'Pilih produk pada setiap baris item pengadaan.';
+            } else if (qty <= 0) {
+                itemError = 'Kuantitas produk yang dipesan harus lebih dari 0.';
+            }
+            items.push({ product_id: prodId, quantity: qty, unit_price: unitPrice });
+        });
+
+        if (itemError) {
+            if (errorAdd) { errorAdd.textContent = itemError; errorAdd.hidden = false; }
+            return;
+        }
+        if (items.length === 0) {
+            if (errorAdd) { errorAdd.textContent = 'Tambahkan minimal 1 item produk pengadaan.'; errorAdd.hidden = false; }
+            return;
+        }
+
+        const submitBtn = isOrderingImmediately ? document.querySelector('#btn-submit-order-po') : btnSaveDraft;
+        const originalText = submitBtn ? submitBtn.textContent : '';
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Menyimpan...'; }
+
+        try {
+            const res = await request('/api/orders/purchase/create', {
+                supplier_id: supId,
+                warehouse_id: whId,
+                notes: notes,
+                items: items,
+                order_immediately: isOrderingImmediately
+            });
+
+            closeAddModal();
+            showToast(isOrderingImmediately
+                ? `✅ Purchase Order #${res.order_id} berhasil dibuat & diterbitkan ke Supplier!`
+                : `✅ Purchase Order #${res.order_id} berhasil disimpan sebagai Draft!`
+            );
+            setTimeout(() => window.location.reload(), 600);
+        } catch (err) {
+            if (errorAdd) {
+                errorAdd.textContent = err.message;
+                errorAdd.hidden = false;
+            }
+        } finally {
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = originalText; }
+            isOrderingImmediately = true;
+        }
+    });
+
+    const closeDetailModal = () => {
+        if (modalDetail) modalDetail.hidden = true;
+        document.body.style.overflow = '';
+    };
+
+    btnCloseDetail?.addEventListener('click', closeDetailModal);
+    btnCloseDetailAction?.addEventListener('click', closeDetailModal);
+    modalDetail?.addEventListener('click', (e) => {
+        if (e.target === modalDetail) closeDetailModal();
+    });
+}
+
 // Inisialisasi Buka/Tutup (Toggle Collapse) Sidebar Menu Dinamis
 function initSidebarToggle() {
     const toggleBtn = document.querySelector('#sidebar-toggle-btn');
@@ -1642,7 +1872,7 @@ function initSidebarToggle() {
     if (!toggleBtn || !workspace) return;
 
     // Baca status tersimpan di localStorage
-    const savedState = localStorage.getItem('stokora_sidebar_collapsed');
+    const savedState = localStorage.getItem('simanis_sidebar_collapsed') ?? localStorage.getItem('stokora_sidebar_collapsed');
     if (savedState === 'true') {
         workspace.classList.add('sidebar-collapsed');
     }
@@ -1650,7 +1880,7 @@ function initSidebarToggle() {
     toggleBtn.addEventListener('click', () => {
         workspace.classList.toggle('sidebar-collapsed');
         const isCollapsed = workspace.classList.contains('sidebar-collapsed');
-        localStorage.setItem('stokora_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+        localStorage.setItem('simanis_sidebar_collapsed', isCollapsed ? 'true' : 'false');
         showToast(isCollapsed ? '◀ Sidebar ditutup (Konten otomatis melebar)' : '▶ Sidebar dibuka');
     });
 }
@@ -1658,6 +1888,14 @@ function initSidebarToggle() {
 // Inisialisasi Switcher Peran
 function initRoleSwitcher() {
     const buttons = document.querySelectorAll('.role-btn');
+
+    // Hanya Admin yang boleh mensimulasikan peran lain; Sales & Gudang terkunci sesuai role akunnya
+    if (AppState.realRole !== 'admin') {
+        document.querySelector('.role-simulator-container')?.remove();
+        document.querySelectorAll('.nav-item.role-restricted').forEach((nav) => nav.style.display = 'none');
+        return;
+    }
+
     buttons.forEach((btn) => {
         btn.addEventListener('click', () => {
             const role = btn.getAttribute('data-role');
@@ -1880,20 +2118,38 @@ function renderPurchaseOrderActions() {
     document.querySelectorAll('#po-table-body tr[data-po-id]').forEach(tr => {
         const id = tr.getAttribute('data-po-id');
         const status = tr.getAttribute('data-po-status');
-        const act = tr.querySelector(`#po-action-${id}`) || tr.querySelector('td:last-child');
+        const act = tr.querySelector(`#po-action-${id}`) || tr.querySelector('.action-cell') || tr.querySelector('td:last-child');
         if (!act) return;
 
-        if (status === 'sent_to_supplier' || status === 'proposed') {
+        let buttons = `<button type="button" class="btn-sm btn-secondary" data-action="view-po-detail" data-po-id="${id}" onclick="SimulasiModule.viewPODetail('${id}')" title="Lihat Rincian Purchase Order">👁️ Detail</button> `;
+
+        if (status === 'draft') {
             if (role === 'warehouse' || role === 'admin') {
-                act.innerHTML = `
-                    <button class="btn-sm btn-success" data-action="process-gr" data-po-id="${id}" onclick="SimulasiModule.processGoodsReceipt('${id}')">📥 Catat Goods Receipt (Tambah Stok)</button>
+                buttons += `
+                    <button type="button" class="btn-sm btn-primary" data-action="order-po" data-po-id="${id}" onclick="SimulasiModule.orderPO('${id}')" title="Terbitkan & Pesan ke Supplier">🚀 Terbitkan</button>
+                    <button type="button" class="btn-sm btn-danger" data-action="cancel-po" data-po-id="${id}" onclick="SimulasiModule.cancelPO('${id}')" title="Batalkan PO draft">❌ Batal</button>
                 `;
             } else {
-                act.innerHTML = `<span class="text-muted"><small>Hanya Staff Gudang yang dapat mencatat barang masuk.</small></span>`;
+                buttons += `<span class="text-muted"><small>Draft PO</small></span>`;
+            }
+        } else if (status === 'sent_to_supplier' || status === 'proposed') {
+            if (role === 'warehouse' || role === 'admin') {
+                buttons += `
+                    <button type="button" class="btn-sm btn-success" data-action="process-gr" data-po-id="${id}" onclick="SimulasiModule.processGoodsReceipt('${id}')" title="Catat barang masuk gudang (GR)">📥 Catat GR</button>
+                    <button type="button" class="btn-sm btn-danger" data-action="cancel-po" data-po-id="${id}" onclick="SimulasiModule.cancelPO('${id}')" title="Batalkan PO">❌ Batal</button>
+                `;
+            } else {
+                buttons += `<span class="text-muted"><small>Menunggu Supplier</small></span>`;
             }
         } else if (status === 'goods_received') {
-            act.innerHTML = `<span class="text-muted"><small>Stok bertambah di Ledger</small></span>`;
+            buttons += `<span class="text-success"><small>✅ Diterima di Gudang</small></span>`;
+        } else if (status === 'cancelled') {
+            buttons += `<span class="text-danger"><small>❌ Dibatalkan</small></span>`;
+        } else {
+            buttons += `<span class="text-muted"><small>${escapeHtml(status)}</small></span>`;
         }
+
+        act.innerHTML = buttons;
     });
 }
 
@@ -1925,6 +2181,15 @@ document.addEventListener('click', (e) => {
     } else if (action === 'process-gi' && soId) {
         e.preventDefault();
         window.SimulasiModule.processGoodsIssue(soId);
+    } else if (action === 'view-po-detail' && poId) {
+        e.preventDefault();
+        window.SimulasiModule.viewPODetail(poId);
+    } else if (action === 'order-po' && poId) {
+        e.preventDefault();
+        window.SimulasiModule.orderPO(poId);
+    } else if (action === 'cancel-po' && poId) {
+        e.preventDefault();
+        window.SimulasiModule.cancelPO(poId);
     } else if (action === 'process-gr' && poId) {
         e.preventDefault();
         window.SimulasiModule.processGoodsReceipt(poId);
@@ -2119,42 +2384,143 @@ window.SimulasiModule = {
 
     // 2. Purchase Order & Goods Receipt Workflow
     createPurchaseOrder: async () => {
+        document.querySelector('#btn-create-po')?.click();
+    },
+
+    viewPODetail: async (id) => {
+        const modal = document.querySelector('#modal-detail-po');
+        const loading = document.querySelector('#detail-po-loading');
+        const content = document.querySelector('#detail-po-content');
+        if (!modal) return;
+
+        modal.hidden = false;
+        document.body.style.overflow = 'hidden';
+        if (loading) loading.hidden = false;
+        if (content) content.hidden = true;
+
+        try {
+            const res = await request('/api/orders/purchase/detail', { order_id: parseInt(id, 10) });
+            const po = res.data.order;
+            const items = res.data.items || [];
+
+            document.querySelector('#detail-po-title').textContent = `🚛 Detail Purchase Order #${po.po_number || id}`;
+            const badge = document.querySelector('#detail-po-badge');
+            if (badge) {
+                badge.textContent = po.status;
+                const badgeMap = {
+                    'draft': 'badge-secondary',
+                    'sent_to_supplier': 'badge-blue',
+                    'proposed': 'badge-warning',
+                    'goods_received': 'badge-success',
+                    'cancelled': 'badge-danger'
+                };
+                badge.className = 'badge ' + (badgeMap[po.status] || 'badge-secondary');
+            }
+
+            document.querySelector('#detail-po-number').textContent = '#' + (po.po_number || id);
+            document.querySelector('#detail-po-supplier').textContent = po.supplier_name || '-';
+            document.querySelector('#detail-po-warehouse').textContent = po.warehouse_name || '-';
+            document.querySelector('#detail-po-creator').textContent = po.creator_name || '-';
+            document.querySelector('#detail-po-date').textContent = po.created_at || '-';
+
+            const notesContainer = document.querySelector('#detail-po-notes-container');
+            const notesEl = document.querySelector('#detail-po-notes');
+            if (notesContainer && notesEl) {
+                if (po.notes && po.notes.trim() !== '') {
+                    notesEl.textContent = po.notes;
+                    notesContainer.hidden = false;
+                } else {
+                    notesContainer.hidden = true;
+                }
+            }
+
+            const itemsTbody = document.querySelector('#detail-po-items-body');
+            if (itemsTbody) {
+                itemsTbody.innerHTML = '';
+                let total = 0;
+                items.forEach(it => {
+                    const qtyOrdered = parseInt(it.quantity || '0', 10);
+                    const qtyReceived = parseInt(it.quantity_received || '0', 10);
+                    const price = parseFloat(it.unit_price || '0');
+                    const subtotal = qtyOrdered * price;
+                    total += subtotal;
+
+                    const row = document.createElement('tr');
+                    const grBadge = qtyReceived >= qtyOrdered 
+                        ? `<span class="badge badge-success">${qtyReceived} unit</span>`
+                        : (qtyReceived > 0 
+                            ? `<span class="badge badge-warning">${qtyReceived} / ${qtyOrdered} unit</span>` 
+                            : `<span class="text-muted">0 unit</span>`);
+
+                    row.innerHTML = `
+                        <td><strong>${escapeHtml(it.sku || '-')}</strong></td>
+                        <td>${escapeHtml(it.product_name || '-')}</td>
+                        <td style="text-align: right;">${qtyOrdered.toLocaleString('id-ID')} unit</td>
+                        <td style="text-align: right;">${grBadge}</td>
+                        <td style="text-align: right;">Rp ${price.toLocaleString('id-ID')}</td>
+                        <td style="text-align: right; font-weight: 600;">Rp ${subtotal.toLocaleString('id-ID')}</td>
+                    `;
+                    itemsTbody.appendChild(row);
+                });
+                document.querySelector('#detail-po-total').textContent = 'Rp ' + total.toLocaleString('id-ID');
+            }
+
+            // Render Contextual Actions in PO Detail Modal
+            const actContainer = document.querySelector('#detail-po-contextual-actions');
+            if (actContainer) {
+                actContainer.innerHTML = '';
+                const role = AppState.currentRole;
+                if (po.status === 'draft') {
+                    if (role === 'admin' || role === 'warehouse') {
+                        actContainer.innerHTML = `
+                            <button type="button" class="modal-btn modal-btn-primary" data-action="order-po" data-po-id="${id}" onclick="SimulasiModule.orderPO('${id}')">🚀 Terbitkan &amp; Pesan ke Supplier</button>
+                            <button type="button" class="modal-btn modal-btn-danger" data-action="cancel-po" data-po-id="${id}" onclick="SimulasiModule.cancelPO('${id}')">❌ Batalkan Order</button>
+                        `;
+                    }
+                } else if (po.status === 'sent_to_supplier' || po.status === 'proposed') {
+                    if (role === 'warehouse' || role === 'admin') {
+                        actContainer.innerHTML = `
+                            <button type="button" class="modal-btn modal-btn-primary" data-action="process-gr" data-po-id="${id}" onclick="SimulasiModule.processGoodsReceipt('${id}')">📥 Catat Goods Receipt (Penerimaan Barang)</button>
+                            <button type="button" class="modal-btn modal-btn-danger" data-action="cancel-po" data-po-id="${id}" onclick="SimulasiModule.cancelPO('${id}')">❌ Batalkan Order</button>
+                        `;
+                    }
+                } else if (po.status === 'goods_received') {
+                    actContainer.innerHTML = `<span class="badge badge-success" style="padding: 8px 14px; font-size: 13px;">✅ Barang Diterima Lengkap &amp; Stok Gudang Telah Bertambah</span>`;
+                }
+            }
+
+            if (loading) loading.hidden = true;
+            if (content) content.hidden = false;
+        } catch (err) {
+            showToast('❌ Gagal memuat detail PO: ' + err.message);
+            if (loading) loading.textContent = 'Gagal memuat: ' + err.message;
+        }
+    },
+
+    orderPO: async (id) => {
         if (AppState.currentRole === 'sales') {
-            showToast('❌ Akses Ditolak: Sales Staff tidak memiliki akses ke pengadaan / Purchase Order.');
+            showToast('❌ Akses Ditolak: Sales Staff tidak memiliki izin untuk pengadaan.');
             return;
         }
         try {
-            const res = await request('/api/orders/purchase/create', {
-                supplier_id: 1,
-                warehouse_id: 1,
-                notes: 'Pengadaan pengisian stok',
-                items: [
-                    { product_id: 2, quantity: 15, unit_price: 3200000.0 }
-                ]
-            });
-            const newPoId = res.order_id || Math.floor(500 + Math.random() * 400);
-            await request('/api/orders/purchase/order', { order_id: newPoId });
+            await request('/api/orders/purchase/order', { order_id: parseInt(id, 10) });
+            showToast(`🚀 Purchase Order #${id} berhasil diterbitkan dan dipesan ke Supplier!`);
+            setTimeout(() => window.location.reload(), 600);
+        } catch (err) {
+            showToast('❌ ' + err.message);
+        }
+    },
 
-            const tbody = document.querySelector('#po-table-body');
-            const newRow = document.createElement('tr');
-            newRow.id = `po-row-${newPoId}`;
-            newRow.setAttribute('data-po-id', String(newPoId));
-            newRow.setAttribute('data-po-status', 'sent_to_supplier');
-            const isWh = AppState.currentRole === 'warehouse';
-            newRow.innerHTML = `
-                <td><strong>#PO-2026-${newPoId}</strong></td>
-                <td>PT Supplier Utama Indonesia</td>
-                <td>Gudang Utama Jakarta</td>
-                <td>Monitor 27 Inch (15 unit)</td>
-                <td>${AppState.rolesInfo[AppState.currentRole].title}</td>
-                <td><span class="badge badge-blue" id="po-status-${newPoId}">sent_to_supplier</span></td>
-                <td id="po-action-${newPoId}"></td>
-            `;
-            tbody?.prepend(newRow);
-            renderPurchaseOrderActions();
-            showToast(isWh 
-                ? `📋 Usulan PO #PO-2026-${newPoId} berhasil diajukan oleh Staff Gudang!` 
-                : `🚛 Purchase Order #PO-2026-${newPoId} berhasil diterbitkan di database!`);
+    cancelPO: async (id) => {
+        if (AppState.currentRole === 'sales') {
+            showToast('❌ Akses Ditolak: Sales Staff tidak memiliki izin untuk pengadaan.');
+            return;
+        }
+        if (!confirm(`Yakin ingin membatalkan Purchase Order #${id}?`)) return;
+        try {
+            await request('/api/orders/purchase/cancel', { order_id: parseInt(id, 10) });
+            showToast(`❌ Purchase Order #${id} berhasil dibatalkan.`);
+            setTimeout(() => window.location.reload(), 600);
         } catch (err) {
             showToast('❌ ' + err.message);
         }
@@ -2162,20 +2528,16 @@ window.SimulasiModule = {
 
     processGoodsReceipt: async (id) => {
         if (AppState.currentRole !== 'warehouse' && AppState.currentRole !== 'admin') {
-            showToast('⚠️ Hanya Staff Gudang yang dapat mencatat penerimaan barang (Goods Receipt).');
+            showToast('⚠️ Hanya Staff Gudang dan Admin yang dapat mencatat penerimaan barang (Goods Receipt).');
+            return;
+        }
+        if (!confirm(`Konfirmasi pencatatan penerimaan fisik barang (Goods Receipt) untuk PO #${id}?\n\nStok gudang akan bertambah secara atomik dan dicatat di Stock Ledger.`)) {
             return;
         }
         try {
             await request('/api/orders/purchase/receive', { order_id: parseInt(id, 10) });
-            const row = document.querySelector(`#po-row-${id}`);
-            if (row) row.setAttribute('data-po-status', 'goods_received');
-            const statusBadge = document.querySelector(`#po-status-${id}`);
-            if (statusBadge) {
-                statusBadge.className = 'badge badge-success';
-                statusBadge.textContent = 'goods_received';
-            }
-            renderPurchaseOrderActions();
-            showToast(`📥 Goods Receipt #PO-2026-${id} berhasil! Stok fisik bertambah di database.`);
+            showToast(`📥 Goods Receipt #${id} sukses! Stok fisik bertambah di gudang dan tercatat di Stock Ledger.`);
+            setTimeout(() => window.location.reload(), 600);
         } catch (err) {
             showToast('❌ ' + err.message);
         }

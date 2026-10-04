@@ -22,4 +22,13 @@ final class LoginLimiter
         $del->execute([$now - 86400]);
         return $allowed;
     }
+
+    /** Unix timestamp saat jendela pembatasan untuk key ini berakhir (jendela 15 menit). */
+    public function retryAt(string $key): int
+    {
+        $read = $this->pdo->prepare('SELECT window_start FROM login_attempts WHERE bucket = ?');
+        $read->execute([hash('sha256', $key)]);
+        $start = $read->fetchColumn();
+        return ($start === false ? time() : (int) $start) + 900;
+    }
 }

@@ -193,6 +193,32 @@ final class InMemoryOrderRepository implements OrderRepositoryInterface
         return $this->purchaseOrders[$id] ?? null;
     }
 
+    /** @return list<array{id: int, purchase_order_id: int, product_id: int, sku: string, product_name: string, quantity: int, quantity_received: int, unit_price: float, subtotal: float}> */
+    public function findPurchaseOrderItems(int $purchaseOrderId): array
+    {
+        $items = $this->purchaseOrderItems[$purchaseOrderId] ?? [];
+        $result = [];
+        $i = 1;
+        foreach ($items as $item) {
+            $pId = $item['product_id'];
+            $qty = $item['quantity'];
+            $qtyRec = $item['quantity_received'];
+            $price = $item['unit_price'];
+            $result[] = [
+                'id' => $i++,
+                'purchase_order_id' => $purchaseOrderId,
+                'product_id' => $pId,
+                'sku' => "PRD-{$pId}",
+                'product_name' => "Mock Product {$pId}",
+                'quantity' => $qty,
+                'quantity_received' => $qtyRec,
+                'unit_price' => $price,
+                'subtotal' => $qty * $price,
+            ];
+        }
+        return $result;
+    }
+
     /**
      * @param list<array{product_id: int, quantity: int, unit_price: float}> $items
      */

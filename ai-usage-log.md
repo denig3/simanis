@@ -1,6 +1,6 @@
 # Catatan Penggunaan Kecerdasan Buatan (AI Usage Log)
 
-**Proyek**: Inventory & Order Management System (STOKORA)  
+**Proyek**: SIMANIS (Sistem Manajemen Inventaris & Order Management System)  
 **Kepatuhan**: Mengikuti Ketentuan Integritas Proses §6.2 (Disclose, Review, Verify, Test)
 
 ---

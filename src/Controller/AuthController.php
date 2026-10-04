@@ -22,7 +22,11 @@ class AuthController extends BaseController
         $ipAllowed = $this->limiter->consume('ip:' . $ip, 30);
         $emailAllowed = $this->limiter->consume('email:' . strtolower(trim($email)), 5);
         if (!$ipAllowed || !$emailAllowed) {
-            self::json(['message' => 'Terlalu banyak percobaan. Silakan coba lagi dalam 15 menit.'], 429);
+            $retryAt = max(
+                $ipAllowed ? 0 : $this->limiter->retryAt('ip:' . $ip),
+                $emailAllowed ? 0 : $this->limiter->retryAt('email:' . strtolower(trim($email)))
+            );
+            self::json(['message' => 'Terlalu banyak percobaan. Silakan coba lagi jam ' . date('H:i', $retryAt) . '.'], 429);
         }
         $user = $this->auth->attempt($email, $password);
         if ($user === null) {

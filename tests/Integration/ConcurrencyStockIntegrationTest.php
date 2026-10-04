@@ -101,11 +101,15 @@ final class ConcurrencyStockIntegrationTest extends TestCase
             ->execute([$productId, $warehouseId]);
 
         // Buat dan setujui Sales Order
-        $salesUser = ['id' => 2, 'role' => 'sales'];
-        $adminUser = ['id' => 1, 'role' => 'admin'];
-        $warehouseUser = ['id' => 4, 'role' => 'warehouse'];
+        $adminId = (int) ($this->pdo->query("SELECT id FROM users WHERE role = 'admin' LIMIT 1")->fetchColumn() ?: 6);
+        $salesId = (int) ($this->pdo->query("SELECT id FROM users WHERE role = 'sales' LIMIT 1")->fetchColumn() ?: 2);
+        $warehouseUserId = (int) ($this->pdo->query("SELECT id FROM users WHERE role = 'warehouse' LIMIT 1")->fetchColumn() ?: 4);
 
-        $soId = $this->orderRepo->createSalesOrder(1, $warehouseId, 2, 'Integration test SO', [
+        $salesUser = ['id' => $salesId, 'role' => 'sales'];
+        $adminUser = ['id' => $adminId, 'role' => 'admin'];
+        $warehouseUser = ['id' => $warehouseUserId, 'role' => 'warehouse'];
+
+        $soId = $this->orderRepo->createSalesOrder(1, $warehouseId, $salesId, 'Integration test SO', [
             ['product_id' => $productId, 'quantity' => 5, 'unit_price' => 850000.0],
         ]);
         $this->service->submitSalesOrder($salesUser, $soId);
@@ -153,19 +157,23 @@ final class ConcurrencyStockIntegrationTest extends TestCase
         $this->pdo->prepare('UPDATE inventory_stocks SET quantity_on_hand = 5 WHERE product_id = ? AND warehouse_id = ?')
             ->execute([$productId, $warehouseId]);
 
-        $salesUser = ['id' => 2, 'role' => 'sales'];
-        $adminUser = ['id' => 1, 'role' => 'admin'];
-        $warehouseUser = ['id' => 4, 'role' => 'warehouse'];
+        $adminId = (int) ($this->pdo->query("SELECT id FROM users WHERE role = 'admin' LIMIT 1")->fetchColumn() ?: 6);
+        $salesId = (int) ($this->pdo->query("SELECT id FROM users WHERE role = 'sales' LIMIT 1")->fetchColumn() ?: 2);
+        $warehouseUserId = (int) ($this->pdo->query("SELECT id FROM users WHERE role = 'warehouse' LIMIT 1")->fetchColumn() ?: 4);
+
+        $salesUser = ['id' => $salesId, 'role' => 'sales'];
+        $adminUser = ['id' => $adminId, 'role' => 'admin'];
+        $warehouseUser = ['id' => $warehouseUserId, 'role' => 'warehouse'];
 
         // Order 1 meminta 4 unit (tersisa 1 unit)
-        $so1 = $this->orderRepo->createSalesOrder(1, $warehouseId, 2, 'Order 1 - minta 4', [
+        $so1 = $this->orderRepo->createSalesOrder(1, $warehouseId, $salesId, 'Order 1 - minta 4', [
             ['product_id' => $productId, 'quantity' => 4, 'unit_price' => 15000000.0],
         ]);
         $this->service->submitSalesOrder($salesUser, $so1);
         $this->service->approveSalesOrder($adminUser, $so1);
 
         // Order 2 meminta 3 unit (jika diproses bersamaan, total butuh 7 unit, padahal stok cuma 5!)
-        $so2 = $this->orderRepo->createSalesOrder(1, $warehouseId, 2, 'Order 2 - minta 3', [
+        $so2 = $this->orderRepo->createSalesOrder(1, $warehouseId, $salesId, 'Order 2 - minta 3', [
             ['product_id' => $productId, 'quantity' => 3, 'unit_price' => 15000000.0],
         ]);
         $this->service->submitSalesOrder($salesUser, $so2);

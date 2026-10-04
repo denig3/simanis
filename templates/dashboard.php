@@ -1,18 +1,37 @@
 <?php
 /** @var array{id: int, name: string, email: string} $user */
 $escape = static fn (string $value): string => htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
-$productsStockSummary = $productsStockSummary ?? [];
-$salesOrdersList = $salesOrdersList ?? [];
-$purchaseOrdersList = $purchaseOrdersList ?? [];
-$stockLedgerList = $stockLedgerList ?? [];
-$warehousesList = $warehousesList ?? [];
-$categoriesList = $categoriesList ?? [];
-$suppliersList = $suppliersList ?? [];
-$customersList = $customersList ?? [];
-$pendingSOCount = $pendingSOCount ?? count(array_filter($salesOrdersList, static fn($so) => $so['status'] === 'pending_approval'));
-$waitingPOCount = $waitingPOCount ?? count(array_filter($purchaseOrdersList, static fn($po) => $po['status'] === 'sent_to_supplier'));
-$criticalStockCount = $criticalStockCount ?? count(array_filter($productsStockSummary, static fn($p) => (int)$p['total_stock'] <= (int)$p['min_stock_threshold']));
-$readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn($so) => $so['status'] === 'approved'));
+$data = $data ?? [];
+$usersList = $data['usersList'] ?? ($usersList ?? []);
+$productsStockSummary = $data['productsStockSummary'] ?? ($productsStockSummary ?? []);
+$salesOrdersList = $data['salesOrdersList'] ?? ($salesOrdersList ?? []);
+$purchaseOrdersList = $data['purchaseOrdersList'] ?? ($purchaseOrdersList ?? []);
+$stockLedgerList = $data['stockLedgerList'] ?? ($stockLedgerList ?? []);
+$warehousesList = $data['warehousesList'] ?? ($warehousesList ?? []);
+$categoriesList = $data['categoriesList'] ?? ($categoriesList ?? []);
+$suppliersList = $data['suppliersList'] ?? ($suppliersList ?? []);
+$customersList = $data['customersList'] ?? ($customersList ?? []);
+$pendingSOCount = $data['pendingSOCount'] ?? ($pendingSOCount ?? count(array_filter($salesOrdersList, static fn($so) => ($so['status'] ?? '') === 'pending_approval')));
+$waitingPOCount = $data['waitingPOCount'] ?? ($waitingPOCount ?? count(array_filter($purchaseOrdersList, static fn($po) => ($po['status'] ?? '') === 'sent_to_supplier')));
+$criticalStockCount = $data['criticalStockCount'] ?? ($criticalStockCount ?? 0);
+$readyGICount = $data['readyGICount'] ?? ($readyGICount ?? count(array_filter($salesOrdersList, static fn($so) => ($so['status'] ?? '') === 'approved')));
+$formatRupiah = static fn(float $num): string => 'Rp ' . number_format($num, 0, ',', '.');
+$inventoryMetrics = $data['inventoryMetrics'] ?? ($inventoryMetrics ?? [
+    'totalCost' => 0.0,
+    'totalValue' => 0.0,
+    'potentialMargin' => 0.0,
+    'marginPercentage' => 0.0,
+    'totalUnits' => 0,
+    'totalSKU' => count($productsStockSummary),
+    'stockJkt' => 0,
+    'stockSby' => 0,
+    'stockBdg' => 0,
+    'totalSORevenue' => 0.0,
+    'totalPOExpense' => 0.0,
+]);
+$stockHealth = $data['stockHealth'] ?? ($stockHealth ?? ['healthy' => 0, 'warning' => 0, 'danger' => 0, 'outOfStock' => 0]);
+$soStats = $data['soStats'] ?? ($soStats ?? []);
+$poStats = $data['poStats'] ?? ($poStats ?? []);
 ?>
 <!doctype html>
 <html lang="id">
@@ -20,11 +39,11 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="<?= $escape($csrf) ?>">
-    <title>Prototype — Inventory &amp; Order Management System</title>
+    <title>SIMANIS — Sistem Manajemen Inventaris &amp; Order</title>
     <link rel="stylesheet" href="/assets/app.css?v=<?= time() ?>">
     <script src="/assets/app.js?v=<?= time() ?>" defer></script>
 </head>
-<body class="dashboard-body">
+<body class="dashboard-body" data-user-role="<?= $escape((string) ($user['role'] ?? 'admin')) ?>">
 
     <!-- Top Header Navigation Bar -->
     <header class="main-header">
@@ -33,10 +52,9 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                 <button id="sidebar-toggle-btn" class="sidebar-toggle-btn" type="button" title="Buka/Tutup Sidebar Menu (Toggle Collapse)" aria-label="Toggle Sidebar Navigation">
                     <span class="toggle-icon">☰</span>
                 </button>
-                <div class="brand-icon">ST</div>
                 <div class="brand-text">
-                    <strong>STOKORA</strong>
-                    <span class="sub-brand">Inventory &amp; Order System</span>
+                    <strong>SIMANIS</strong>
+                    <span class="sub-brand">Sistem Manajemen Inventaris</span>
                 </div>
             </div>
 
@@ -140,21 +158,50 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
 
                 <!-- === ADMIN VIEW: Seluruh data === -->
                 <div id="dash-view-admin" class="role-dash-view">
+                    <!-- BARIS 1: Valuasi Finansial & Aset Inventaris -->
                     <div class="metrics-grid">
                         <div class="metric-card">
-                            <div class="metric-icon bg-emerald">📦</div>
+                            <div class="metric-icon bg-blue">💰</div>
                             <div class="metric-data">
-                                <span class="metric-label">Total Jenis Produk</span>
-                                <strong class="metric-value"><?= count($productsStockSummary) ?> SKU</strong>
-                                <small class="text-success">Terdistribusi di <?= count($warehousesList) ?> Gudang</small>
+                                <span class="metric-label">Valuasi Modal Inventaris</span>
+                                <strong class="metric-value"><?= $formatRupiah((float)$inventoryMetrics['totalCost']) ?></strong>
+                                <small class="muted">Total biaya perolehan modal aset fisik</small>
                             </div>
                         </div>
                         <div class="metric-card">
-                            <div class="metric-icon bg-blue">🏪</div>
+                            <div class="metric-icon bg-emerald">🏷️</div>
                             <div class="metric-data">
-                                <span class="metric-label">Gudang Aktif</span>
-                                <strong class="metric-value"><?= count($warehousesList) ?> Gudang</strong>
-                                <small class="muted">Jakarta, Surabaya, Bandung</small>
+                                <span class="metric-label">Estimasi Nilai Jual (Omzet)</span>
+                                <strong class="metric-value"><?= $formatRupiah((float)$inventoryMetrics['totalValue']) ?></strong>
+                                <small class="text-success">Potensi Margin: +<?= number_format((float)$inventoryMetrics['marginPercentage'], 1) ?>% (<?= $formatRupiah((float)$inventoryMetrics['potentialMargin']) ?>)</small>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon bg-purple">📦</div>
+                            <div class="metric-data">
+                                <span class="metric-label">Total Fisik Unit Stok</span>
+                                <strong class="metric-value"><?= number_format((int)$inventoryMetrics['totalUnits']) ?> Unit</strong>
+                                <small class="muted">Dari <?= count($productsStockSummary) ?> SKU di <?= count($warehousesList) ?> Gudang</small>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon bg-emerald">📈</div>
+                            <div class="metric-data">
+                                <span class="metric-label">Omzet Sales Order Aktif</span>
+                                <strong class="metric-value"><?= $formatRupiah((float)$inventoryMetrics['totalSORevenue']) ?></strong>
+                                <small class="text-success">Dari pesanan disetujui &amp; fulfilled</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BARIS 2: Pipeline Antrean Kerja Operasional -->
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-icon bg-blue">🛒</div>
+                            <div class="metric-data">
+                                <span class="metric-label">Total Sales Orders</span>
+                                <strong class="metric-value"><?= count($salesOrdersList) ?> Pesanan</strong>
+                                <small class="muted">Draft, berjalan, &amp; selesai</small>
                             </div>
                         </div>
                         <div class="metric-card">
@@ -162,15 +209,145 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                             <div class="metric-data">
                                 <span class="metric-label">SO Pending Approval</span>
                                 <strong class="metric-value" id="dash-pending-so"><?= (int)$pendingSOCount ?> Order</strong>
-                                <small class="text-amber">Butuh Peninjauan Admin</small>
+                                <small class="text-amber">Butuh Peninjauan Admin (SOD)</small>
                             </div>
                         </div>
                         <div class="metric-card">
                             <div class="metric-icon bg-purple">🚚</div>
                             <div class="metric-data">
-                                <span class="metric-label">PO Menunggu Barang</span>
+                                <span class="metric-label">PO Menunggu Barang (GR)</span>
                                 <strong class="metric-value"><?= (int)$waitingPOCount ?> Supplier PO</strong>
-                                <small class="text-blue">Siap Goods Receipt</small>
+                                <small class="text-blue">Siap Penerimaan Gudang</small>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon bg-danger">⚠️</div>
+                            <div class="metric-data">
+                                <span class="metric-label">SKU Perlu Reorder</span>
+                                <strong class="metric-value text-danger"><?= (int)$criticalStockCount ?> Produk</strong>
+                                <small class="text-danger">Stok di bawah batas minimum</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BARIS 3: Rekapitulasi Status Analitik (2 Kolom Berdampingan) -->
+                    <div class="analytics-grid">
+                        <!-- Kolom 1: Rekap Status Sales Order -->
+                        <div class="panel-card" style="margin-bottom: 0;">
+                            <div class="card-header flex-between">
+                                <div>
+                                    <h3>🛒 Rekapitulasi Status Sales Order (SO)</h3>
+                                    <span class="card-subtitle">Distribusi pesanan penjualan &amp; perputaran dana</span>
+                                </div>
+                                <span class="badge badge-purple"><?= count($salesOrdersList) ?> Total SO</span>
+                            </div>
+                            <div class="recap-list">
+                                <div class="recap-item">
+                                    <div class="recap-item-left">
+                                        <span class="badge badge-neutral">Draft</span>
+                                        <span>Pesanan Draft (Sales)</span>
+                                    </div>
+                                    <div class="recap-item-right">
+                                        <span class="recap-item-amount"><?= $formatRupiah((float)($soStats['draft']['amount'] ?? 0)) ?></span>
+                                        <span class="recap-item-count"><?= (int)($soStats['draft']['count'] ?? 0) ?> Order</span>
+                                    </div>
+                                </div>
+                                <div class="recap-item">
+                                    <div class="recap-item-left">
+                                        <span class="badge badge-warning">Pending Approval</span>
+                                        <span>Menunggu Review Admin</span>
+                                    </div>
+                                    <div class="recap-item-right">
+                                        <span class="recap-item-amount"><?= $formatRupiah((float)($soStats['pending_approval']['amount'] ?? 0)) ?></span>
+                                        <span class="recap-item-count"><?= (int)($soStats['pending_approval']['count'] ?? 0) ?> Order</span>
+                                    </div>
+                                </div>
+                                <div class="recap-item">
+                                    <div class="recap-item-left">
+                                        <span class="badge badge-info">Approved</span>
+                                        <span>Disetujui (Siap Kirim / GI)</span>
+                                    </div>
+                                    <div class="recap-item-right">
+                                        <span class="recap-item-amount"><?= $formatRupiah((float)($soStats['approved']['amount'] ?? 0)) ?></span>
+                                        <span class="recap-item-count"><?= (int)($soStats['approved']['count'] ?? 0) ?> Order</span>
+                                    </div>
+                                </div>
+                                <div class="recap-item">
+                                    <div class="recap-item-left">
+                                        <span class="badge badge-success">Fulfilled</span>
+                                        <span>Pesanan Selesai Terkirim</span>
+                                    </div>
+                                    <div class="recap-item-right">
+                                        <span class="recap-item-amount"><?= $formatRupiah((float)($soStats['fulfilled']['amount'] ?? 0)) ?></span>
+                                        <span class="recap-item-count"><?= (int)($soStats['fulfilled']['count'] ?? 0) ?> Order</span>
+                                    </div>
+                                </div>
+                                <div class="recap-item">
+                                    <div class="recap-item-left">
+                                        <span class="badge badge-danger">Cancelled / Rejected</span>
+                                        <span>Dibatalkan / Ditolak</span>
+                                    </div>
+                                    <div class="recap-item-right">
+                                        <span class="recap-item-amount"><?= $formatRupiah((float)(($soStats['cancelled']['amount'] ?? 0) + ($soStats['rejected']['amount'] ?? 0))) ?></span>
+                                        <span class="recap-item-count"><?= (int)(($soStats['cancelled']['count'] ?? 0) + ($soStats['rejected']['count'] ?? 0)) ?> Order</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kolom 2: Rekap Status Purchase Order & Distribusi Gudang -->
+                        <div class="panel-card" style="margin-bottom: 0;">
+                            <div class="card-header flex-between">
+                                <div>
+                                    <h3>🚚 Rekap Pengadaan PO &amp; Distribusi Gudang</h3>
+                                    <span class="card-subtitle">Pengadaan barang masuk &amp; sebaran aset fisik</span>
+                                </div>
+                                <span class="badge badge-blue"><?= count($purchaseOrdersList) ?> Total PO</span>
+                            </div>
+                            <div class="recap-list">
+                                <div class="recap-item">
+                                    <div class="recap-item-left">
+                                        <span class="badge badge-warning">PO Sent to Supplier</span>
+                                        <span>Menunggu Pengiriman Supplier</span>
+                                    </div>
+                                    <div class="recap-item-right">
+                                        <span class="recap-item-amount"><?= $formatRupiah((float)($poStats['sent_to_supplier']['amount'] ?? 0)) ?></span>
+                                        <span class="recap-item-count"><?= (int)($poStats['sent_to_supplier']['count'] ?? 0) ?> PO</span>
+                                    </div>
+                                </div>
+                                <div class="recap-item">
+                                    <div class="recap-item-left">
+                                        <span class="badge badge-success">Goods Received</span>
+                                        <span>Barang Masuk Selesai (GR)</span>
+                                    </div>
+                                    <div class="recap-item-right">
+                                        <span class="recap-item-amount"><?= $formatRupiah((float)($poStats['received']['amount'] ?? 0)) ?></span>
+                                        <span class="recap-item-count"><?= (int)($poStats['received']['count'] ?? 0) ?> PO</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Distribusi Fisik per Gudang -->
+                            <div style="margin-top: 16px;">
+                                <strong style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Sebaran Stok per Lokasi Gudang:</strong>
+                                <div class="recap-pills">
+                                    <div class="recap-pill">
+                                        <span>🏬 Gudang JKT</span>
+                                        <strong><?= (int)$inventoryMetrics['stockJkt'] ?> unit</strong>
+                                    </div>
+                                    <div class="recap-pill">
+                                        <span>🏬 Gudang SBY</span>
+                                        <strong><?= (int)$inventoryMetrics['stockSby'] ?> unit</strong>
+                                    </div>
+                                    <div class="recap-pill">
+                                        <span>🏬 Gudang BDG</span>
+                                        <strong><?= (int)$inventoryMetrics['stockBdg'] ?> unit</strong>
+                                    </div>
+                                    <div class="recap-pill">
+                                        <span>🛡️ Stok Sehat</span>
+                                        <strong class="text-success"><?= (int)$stockHealth['healthy'] ?> / <?= (int)$inventoryMetrics['totalSKU'] ?> SKU</strong>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -998,7 +1175,7 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                     </div>
                     <div style="display:flex;gap:0.5rem;align-items:center;">
                         <a href="/export/csv?type=po" download="daftar_purchase_orders.csv" class="btn btn-secondary" id="btn-export-po">📥 Ekspor PO (CSV)</a>
-                        <button type="button" class="btn btn-primary" id="btn-create-po" data-action="create-po" onclick="SimulasiModule.createPurchaseOrder()">
+                        <button type="button" class="btn btn-primary" id="btn-create-po" data-action="create-po">
                             🚛 Buat Purchase Order (PO) Baru
                         </button>
                     </div>
@@ -1024,7 +1201,12 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                                         <?php
                                             $poId = (int) $po['id'];
                                             $status = (string) $po['status'];
-                                            $bClass = $status === 'goods_received' ? 'badge-success' : 'badge-blue';
+                                            $bClass = match($status) {
+                                                'goods_received' => 'badge-success',
+                                                'draft' => 'badge-secondary',
+                                                'cancelled' => 'badge-danger',
+                                                default => 'badge-blue',
+                                            };
                                         ?>
                                         <tr id="po-row-<?= $poId ?>" data-po-id="<?= $poId ?>" data-po-status="<?= $status ?>">
                                             <td><strong>#<?= $escape((string)$po['po_number']) ?></strong></td>
@@ -1033,7 +1215,7 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                                             <td><?= $escape((string)$po['items_summary']) ?></td>
                                             <td><?= $escape((string)$po['creator_name']) ?></td>
                                             <td><span class="badge <?= $bClass ?>" id="po-status-<?= $poId ?>"><?= $escape($status) ?></span></td>
-                                            <td id="po-action-<?= $poId ?>"></td>
+                                            <td class="action-cell" id="po-action-<?= $poId ?>"></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 <?php else: ?>
@@ -2065,12 +2247,183 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
         </div>
     </div>
 
-    <!-- Data Katalog Produk untuk Helper JS Form SO -->
+    <!-- Modal Buat Purchase Order (PO) Baru -->
+    <div id="modal-add-po" class="modal-overlay" hidden>
+        <div class="modal-card modal-card-xl">
+            <div class="modal-header">
+                <h3>🚛 Buat Purchase Order (PO) Baru</h3>
+                <button type="button" class="modal-close-btn" id="btn-close-add-po" title="Tutup Modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-add-po">
+                    <div id="add-po-error" class="form-message" role="alert" hidden style="margin-bottom: 14px;"></div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div class="field">
+                            <label for="new-po-supplier" style="display:block; font-weight:600; margin-bottom: 6px;">Pilih Supplier / Pemasok <span class="text-danger">*</span></label>
+                            <select id="new-po-supplier" name="supplier_id" class="input" style="width:100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #fff;" required>
+                                <option value="">-- Pilih Supplier --</option>
+                                <?php foreach ($suppliersList as $s): ?>
+                                    <option value="<?= (int)$s['id'] ?>"><?= $escape((string)$s['name']) ?> (<?= $escape((string)$s['code']) ?>)</option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="new-po-warehouse" style="display:block; font-weight:600; margin-bottom: 6px;">Pilih Gudang Tujuan Penerimaan <span class="text-danger">*</span></label>
+                            <select id="new-po-warehouse" name="warehouse_id" class="input" style="width:100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #fff;" required>
+                                <option value="">-- Pilih Gudang Tujuan --</option>
+                                <?php foreach ($warehousesList as $w): ?>
+                                    <option value="<?= (int)$w['id'] ?>"><?= $escape((string)$w['name']) ?> (<?= $escape((string)$w['code']) ?> - <?= $escape((string)$w['city']) ?>)</option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tabel Item Produk Dinamis PO -->
+                    <div class="field" style="margin-bottom: 16px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                            <label style="font-weight:600; font-size: 14px; margin: 0;">
+                                Daftar Item Barang Masuk / Pengadaan <span class="text-danger">*</span>
+                            </label>
+                            <button type="button" class="btn-sm btn-secondary" id="btn-add-po-item-row" style="padding: 6px 12px; font-weight: 600;">➕ Tambah Baris Produk</button>
+                        </div>
+                        <div class="table-responsive" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); max-height: 280px; overflow-y: auto;">
+                            <table class="data-table" style="margin: 0; width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th style="min-width: 320px;">Produk (SKU / Nama / Stok Gudang Saat Ini)</th>
+                                        <th style="width: 120px; text-align: right;">Qty Dipesan</th>
+                                        <th style="width: 180px; text-align: right;">Harga Beli Satuan (Rp)</th>
+                                        <th style="width: 180px; text-align: right;">Subtotal (Rp)</th>
+                                        <th style="width: 50px; text-align: center;">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="po-items-tbody">
+                                    <!-- Dynamic Rows Injected by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Grand Total Banner -->
+                    <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <div>
+                            <span class="text-muted" style="font-size: 13px;">Estimasi Total Nilai Pengadaan (PO):</span>
+                            <div style="font-size: 24px; font-weight: 700; color: var(--color-primary);" id="po-grand-total-text">Rp 0</div>
+                        </div>
+                        <div class="text-muted" style="font-size: 12.5px; text-align: right; line-height: 1.5;">
+                            🚚 <strong>Alur Pengadaan &amp; Barang Masuk:</strong><br>Staff Gudang/Admin Buat PO &rarr; Kirim ke Supplier &rarr; Catat Goods Receipt (GR)
+                        </div>
+                    </div>
+
+                    <div class="field" style="margin-bottom: 16px;">
+                        <label for="new-po-notes" style="display:block; font-weight:600; margin-bottom: 6px;">Catatan Pengadaan / Referensi Supplier (Opsional)</label>
+                        <textarea id="new-po-notes" name="notes" class="input" style="width:100%; height:65px; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="Contoh: Pengiriman via armada supplier, estimasi tiba 3 hari kerja"></textarea>
+                    </div>
+
+                    <div class="modal-actions-bar">
+                        <button type="button" class="modal-btn modal-btn-secondary" id="btn-cancel-add-po">Batal</button>
+                        <div class="modal-actions-right" style="display: flex; gap: 10px;">
+                            <button type="button" class="modal-btn modal-btn-secondary" id="btn-save-draft-po" style="border: 1px solid var(--border-color); font-weight:600;">💾 Simpan sebagai Draft</button>
+                            <button type="submit" class="modal-btn modal-btn-primary" id="btn-submit-order-po" style="font-weight:600;">🚀 Terbitkan &amp; Pesan ke Supplier</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detail Purchase Order & Goods Receipt (GR) -->
+    <div id="modal-detail-po" class="modal-overlay" hidden>
+        <div class="modal-card modal-card-xl">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <h3 id="detail-po-title">🚛 Detail Purchase Order</h3>
+                    <span id="detail-po-badge" class="badge"></span>
+                </div>
+                <button type="button" class="modal-close-btn" id="btn-close-detail-po" title="Tutup Modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="detail-po-loading" style="text-align: center; padding: 24px;" class="text-muted">
+                    Memuat data detail Purchase Order...
+                </div>
+                <div id="detail-po-content" hidden>
+                    <!-- Info Grid -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; background: #f8fafc; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 16px;">
+                        <div>
+                            <small class="text-muted" style="display: block;">No. Purchase Order</small>
+                            <strong id="detail-po-number" style="font-size: 15px;">-</strong>
+                        </div>
+                        <div>
+                            <small class="text-muted" style="display: block;">Supplier / Pemasok</small>
+                            <strong id="detail-po-supplier">-</strong>
+                        </div>
+                        <div>
+                            <small class="text-muted" style="display: block;">Gudang Tujuan</small>
+                            <strong id="detail-po-warehouse">-</strong>
+                        </div>
+                        <div>
+                            <small class="text-muted" style="display: block;">Pembuat Order (User)</small>
+                            <span id="detail-po-creator">-</span>
+                        </div>
+                        <div>
+                            <small class="text-muted" style="display: block;">Tanggal Pembuatan</small>
+                            <span id="detail-po-date">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div id="detail-po-notes-container" style="margin-bottom: 16px; padding: 10px 14px; background: #fffbeb; border: 1px solid #fef3c7; border-radius: var(--radius-sm);" hidden>
+                        <small style="color: #92400e; font-weight: 600; display: block;">Catatan Pengadaan:</small>
+                        <span id="detail-po-notes" style="color: #78350f; font-size: 13px;">-</span>
+                    </div>
+
+                    <!-- Items Table -->
+                    <div style="margin-bottom: 16px;">
+                        <h4 style="margin: 0 0 8px 0; font-size: 14px;">Rincian Item Pengadaan &amp; Status Penerimaan Fisik (GR)</h4>
+                        <div class="table-responsive" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                            <table class="data-table" style="margin: 0; width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th>SKU</th>
+                                        <th>Nama Produk</th>
+                                        <th style="text-align: right;">Qty Dipesan</th>
+                                        <th style="text-align: right;">Qty Diterima (GR)</th>
+                                        <th style="text-align: right;">Harga Beli Satuan</th>
+                                        <th style="text-align: right;">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detail-po-items-body">
+                                </tbody>
+                                <tfoot>
+                                    <tr style="font-weight: 700; background: #f8fafc;">
+                                        <td colspan="5" style="text-align: right;">Total Nilai Purchase Order:</td>
+                                        <td id="detail-po-total" style="text-align: right; color: var(--color-primary); font-size: 15px;">Rp 0</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Contextual Actions Bar Inside Detail Modal -->
+                    <div class="modal-actions-bar" style="border-top: 1px solid var(--border-color); padding-top: 14px;">
+                        <button type="button" class="modal-btn modal-btn-secondary" id="btn-close-detail-po-action">Tutup</button>
+                        <div id="detail-po-contextual-actions" style="display: flex; gap: 8px;">
+                            <!-- Injected dynamically based on role & status -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Katalog Produk untuk Helper JS Form SO & PO -->
     <script id="products-catalog-data" type="application/json"><?= json_encode(array_map(static fn($p) => [
         'id' => (int)$p['id'],
         'sku' => (string)$p['sku'],
         'name' => (string)$p['name'],
         'price' => (float)$p['selling_price'],
+        'purchase_price' => (float)$p['purchase_price'],
         'stock' => (int)$p['total_stock'],
     ], $productsStockSummary), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?></script>
 

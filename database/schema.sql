@@ -1,5 +1,5 @@
 -- ==============================================================================
--- SCHEMA & SEED DATABASE SISTEM INVENTARIS & ORDER MULTIGUDANG (STOKORA)
+-- SCHEMA & SEED DATABASE SISTEM INVENTARIS & ORDER MULTIGUDANG (SIMANIS - SISTEM MANAJEMEN INVENTARIS)
 -- Sesuai Spesifikasi Final Project Intermediate Programmer PT Neuronworks Indonesia
 -- ==============================================================================
 
@@ -237,11 +237,11 @@ CREATE TABLE IF NOT EXISTS stock_ledger (
 -- A. USERS (1 Admin, 2 Sales, 2 Warehouse Staff)
 -- Default Password: Admin12345678!
 INSERT INTO users (id, name, email, password_hash, role, assigned_warehouse_id, status) VALUES
-(1, 'Administrator Utama', 'admin@example.com', '$2y$10$f6f2647c20c091961da6e.6y33HkZ8GgT8mB9z/i92r79aVn9rJjK', 'admin', NULL, 'active'),
-(2, 'Ahmad Sales Staff', 'sales@example.com', '$2y$10$f6f2647c20c091961da6e.6y33HkZ8GgT8mB9z/i92r79aVn9rJjK', 'sales', 1, 'active'),
-(3, 'Dewi Sales Senior', 'sales2@example.com', '$2y$10$f6f2647c20c091961da6e.6y33HkZ8GgT8mB9z/i92r79aVn9rJjK', 'sales', 2, 'active'),
-(4, 'Budi Gudang Surabaya', 'warehouse@example.com', '$2y$10$f6f2647c20c091961da6e.6y33HkZ8GgT8mB9z/i92r79aVn9rJjK', 'warehouse', 2, 'active'),
-(5, 'Joko Gudang Jakarta', 'warehouse2@example.com', '$2y$10$f6f2647c20c091961da6e.6y33HkZ8GgT8mB9z/i92r79aVn9rJjK', 'warehouse', 1, 'active')
+(1, 'Administrator Utama', 'admin@example.com', '$2y$10$AFSmpTOYUP8uhJjUj5anguvmkkr4UCe6s1CNM4YkSD/7Xv9Fldg02', 'admin', NULL, 'active'),
+(2, 'Ahmad Sales Staff', 'sales@example.com', '$2y$10$I89Fy0JyYttLC6dN86h60uS31XopxJpeKW9nVQcpZBeWj4hOFOqMO', 'sales', 1, 'active'),
+(3, 'Dewi Sales Senior', 'sales2@example.com', '$2y$10$I89Fy0JyYttLC6dN86h60uS31XopxJpeKW9nVQcpZBeWj4hOFOqMO', 'sales', 2, 'active'),
+(4, 'Budi Gudang Surabaya', 'warehouse@example.com', '$2y$10$4CeZBDlMBCMcDaV1.FsL3OtWRMzFmWLfIkqHI0fmbcS4YhN/utqLS', 'warehouse', 2, 'active'),
+(5, 'Joko Gudang Jakarta', 'warehouse2@example.com', '$2y$10$4CeZBDlMBCMcDaV1.FsL3OtWRMzFmWLfIkqHI0fmbcS4YhN/utqLS', 'warehouse', 1, 'active')
 ON DUPLICATE KEY UPDATE name=VALUES(name);
 
 -- B. GUDANG (3 Gudang Multi-Lokasi)

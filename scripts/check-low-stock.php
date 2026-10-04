@@ -13,7 +13,7 @@
 
 declare(strict_types=1);
 
-require dirname(__DIR__) . '/vendor/autoload.php';
+require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 use App\Infrastructure\Database;
 
@@ -23,7 +23,7 @@ if (PHP_SAPI !== 'cli') {
 }
 
 echo "========================================================================================\n";
-echo "       STOKORA INVENTORY SYSTEM - MONITORING STOK KRITIS & REORDER POINT (JOB-01)       \n";
+echo "       SIMANIS INVENTORY SYSTEM - MONITORING STOK KRITIS & REORDER POINT (JOB-01)       \n";
 echo "========================================================================================\n";
 echo "Waktu Eksekusi: " . date('Y-m-d H:i:s') . "\n";
 echo "Lingkungan: " . (getenv('APP_ENV') ?: 'production') . "\n\n";

@@ -231,6 +231,12 @@ final class OrderService
         return $po;
     }
 
+    /** @return list<array{id: int, purchase_order_id: int, product_id: int, sku: string, product_name: string, quantity: int, quantity_received: int, unit_price: float, subtotal: float}> */
+    public function getPurchaseOrderItems(int $purchaseOrderId): array
+    {
+        return $this->orderRepository->findPurchaseOrderItems($purchaseOrderId);
+    }
+
     /**
      * @param array{id: int|string, role?: string} $user
      * @param array<string, mixed> $input
@@ -286,13 +292,19 @@ final class OrderService
             ];
         }
 
-        return $this->orderRepository->createPurchaseOrder(
+        $poId = $this->orderRepository->createPurchaseOrder(
             $supplierId,
             $warehouseId,
             (int) $user['id'],
             $notes,
             $validatedItems
         );
+
+        if (!empty($input['order_immediately'])) {
+            $this->orderRepository->updatePurchaseOrderStatus($poId, 'sent_to_supplier', (int) $user['id']);
+        }
+
+        return $poId;
     }
 
     /**

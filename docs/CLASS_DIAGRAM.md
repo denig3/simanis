@@ -1,6 +1,6 @@
 # Class Diagram & Architecture Overview
 
-Dokumen ini memuat **Class Diagram** utama proyek **Stokora (Inventory & Order Management)** beserta penjelasan rinci hubungan antar-komponen pada setiap *layer* arsitektur.
+Dokumen ini memuat **Class Diagram** utama proyek **SIMANIS (Sistem Manajemen Inventaris & Order)** beserta penjelasan rinci hubungan antar-komponen pada setiap *layer* arsitektur.
 
 ---
 

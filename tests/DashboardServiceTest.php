@@ -70,5 +70,30 @@ final class DashboardServiceTest extends TestCase
         self::assertCount(2, $data['productsStockSummary']);
         self::assertCount(2, $data['salesOrdersList']);
         self::assertCount(1, $data['purchaseOrdersList']);
+
+        // Verify inventory metrics
+        self::assertEqualsWithDelta(150.0, $data['inventoryMetrics']['totalCost'], 0.01);
+        self::assertEqualsWithDelta(300.0, $data['inventoryMetrics']['totalValue'], 0.01);
+        self::assertEqualsWithDelta(150.0, $data['inventoryMetrics']['potentialMargin'], 0.01);
+        self::assertEqualsWithDelta(100.0, $data['inventoryMetrics']['marginPercentage'], 0.01);
+        self::assertSame(15, $data['inventoryMetrics']['totalUnits']);
+        self::assertSame(2, $data['inventoryMetrics']['totalSKU']);
+        self::assertSame(15, $data['inventoryMetrics']['stockJkt']);
+        self::assertSame(0, $data['inventoryMetrics']['stockSby']);
+        self::assertSame(0, $data['inventoryMetrics']['stockBdg']);
+
+        // Verify stock health
+        self::assertSame(1, $data['stockHealth']['healthy']);
+        self::assertSame(0, $data['stockHealth']['warning']);
+        self::assertSame(1, $data['stockHealth']['danger']);
+        self::assertSame(0, $data['stockHealth']['outOfStock']);
+
+        // Verify SO & PO stats
+        self::assertSame(1, $data['soStats']['pending_approval']['count']);
+        self::assertEqualsWithDelta(500.0, $data['soStats']['pending_approval']['amount'], 0.01);
+        self::assertSame(1, $data['soStats']['approved']['count']);
+        self::assertEqualsWithDelta(300.0, $data['soStats']['approved']['amount'], 0.01);
+        self::assertSame(1, $data['poStats']['sent_to_supplier']['count']);
+        self::assertEqualsWithDelta(1000.0, $data['poStats']['sent_to_supplier']['amount'], 0.01);
     }
 }

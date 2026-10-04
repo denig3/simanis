@@ -1,6 +1,6 @@
 # Architecture Decision Records (ADR)
 
-Dokumen ini mencatat keputusan arsitektur utama yang diambil dalam pengembangan proyek **Stokora (Inventory & Order Management)**.
+Dokumen ini mencatat keputusan arsitektur utama yang diambil dalam pengembangan proyek **SIMANIS (Sistem Manajemen Inventaris & Order Management)**.
 
 ---
 

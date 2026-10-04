@@ -1,6 +1,6 @@
-# Panduan Akses Dashboard & Database Stokora
+# Panduan Akses Dashboard & Database SIMANIS (Sistem Manajemen Inventaris)
 
-Dokumen ini memuat informasi lengkap mengenai kredensial dan cara mengakses **Aplikasi Web / Dashboard Stokora** serta **Koneksi Database MySQL** (menggunakan DBeaver, GUI database, atau terminal).
+Dokumen ini memuat informasi lengkap mengenai kredensial dan cara mengakses **Aplikasi Web / Dashboard SIMANIS** serta **Koneksi Database MySQL** (menggunakan DBeaver, GUI database, atau terminal).
 
 ---
 

@@ -49,7 +49,9 @@ use App\Service\SupplierService;
 use App\Service\UserService;
 use App\Service\WarehouseService;
 
-require dirname(__DIR__) . '/vendor/autoload.php';
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
+date_default_timezone_set('Asia/Jakarta');
 
 // Security Headers
 header('Cache-Control: no-store');
@@ -117,6 +119,7 @@ try {
         '/api/orders/sales/reject',
         '/api/orders/sales/fulfill',
         '/api/orders/sales/cancel',
+        '/api/orders/purchase/detail',
         '/api/orders/purchase/create',
         '/api/orders/purchase/order',
         '/api/orders/purchase/receive',
@@ -219,6 +222,7 @@ try {
             '/api/orders/sales/reject' => $orderController->rejectSalesOrder($input, $sessionUser),
             '/api/orders/sales/fulfill' => $orderController->fulfillSalesOrder($input, $sessionUser),
             '/api/orders/sales/cancel' => $orderController->cancelSalesOrder($input, $sessionUser),
+            '/api/orders/purchase/detail' => $orderController->getPurchaseOrderDetail($input, $sessionUser),
             '/api/orders/purchase/create' => $orderController->createPurchaseOrder($input, $sessionUser),
             '/api/orders/purchase/order' => $orderController->orderPurchaseOrder($input, $sessionUser),
             '/api/orders/purchase/receive' => $orderController->receivePurchaseOrder($input, $sessionUser),
@@ -260,9 +264,9 @@ try {
     if ($path === '/login') {
         $registered = ($_SESSION['registration_success'] ?? false) === true;
         unset($_SESSION['registration_success']);
-        require dirname(__DIR__) . '/templates/login.php';
+        require_once dirname(__DIR__) . '/templates/login.php';
     } elseif ($path === '/register') {
-        require dirname(__DIR__) . '/templates/register.php';
+        require_once dirname(__DIR__) . '/templates/register.php';
     } elseif ($path === '/dashboard') {
         $dashboardService = new DashboardService($userRepo, $warehouseRepo, $categoryRepo, $supplierRepo, $customerRepo, $productRepo, $orderRepo);
         $dashboardController = new DashboardController($dashboardService, $pdo);

@@ -16,7 +16,8 @@ class RegisterController extends BaseController
     public function register(array $input, string $ip): never
     {
         if (!$this->limiter->consume('register:' . $ip, 10)) {
-            self::json(['message' => 'Terlalu banyak percobaan daftar. Coba lagi dalam 15 menit.'], 429);
+            $retryAt = $this->limiter->retryAt('register:' . $ip);
+            self::json(['message' => 'Terlalu banyak percobaan daftar. Coba lagi jam ' . date('H:i', $retryAt) . '.'], 429);
         }
         $name = $input['name'] ?? '';
         $email = $input['email'] ?? '';

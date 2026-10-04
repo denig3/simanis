@@ -33,7 +33,7 @@ Note: Using configuration file D:\Learn\Web\phpstan.neon.
 
 ## 3. Kepatuhan Terhadap Prinsip F.I.R.S.T. pada Pengujian
 
-Seluruh pengujian unit pada sistem STOKORA mematuhi prinsip **FIRST**:
+Seluruh pengujian unit pada sistem SIMANIS mematuhi prinsip **FIRST**:
 
 1. **F — Fast (Cepat)**:
    - Pengujian unit `tests/Unit/OrderServiceTest.php` dan service lainnya menggunakan implementasi `InMemoryOrderRepository` dan mock terisolasi.

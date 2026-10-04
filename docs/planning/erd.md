@@ -1,4 +1,4 @@
-# Entity Relationship Diagram (ERD) — STOKORA
+# Entity Relationship Diagram (ERD) — SIMANIS (Sistem Manajemen Inventaris)
 
 Dokumen ini memetakan relasi data, kunci primer/asing, dan batasan integritas (*integrity constraints*) sistem inventaris dan pesanan multi-gudang.
 

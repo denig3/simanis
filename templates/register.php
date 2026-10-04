@@ -4,15 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="<?= htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') ?>">
-    <title>Daftar - Inventory &amp; Order</title>
+    <title>Daftar — SIMANIS (Sistem Manajemen Inventaris)</title>
     <link rel="stylesheet" href="/assets/app.css?v=<?= time() ?>">
     <script src="/assets/app.js?v=<?= time() ?>" defer></script>
 </head>
-<body>
+<body class="auth-body">
     <main class="login-container">
-        <div class="app-mark" aria-hidden="true">IO</div>
-        <h1>Inventory &amp; Order Management</h1>
-        <p class="muted">Proyek pengelolaan stok dan pesanan.</p>
+        <h1>SIMANIS</h1>
+        <p class="muted">Sistem Manajemen Inventaris &amp; Order</p>
         <section class="panel" aria-labelledby="register-title">
             <h2 id="register-title">Daftar akun</h2>
             <p class="muted">Isi data berikut untuk membuat akun baru.</p>
@@ -43,7 +42,6 @@
             </form>
             <p class="help-text">Sudah punya akun? <a href="/login">Login</a></p>
         </section>
-        <p class="footer-note"><span class="phase-label">Fase 1</span> Pendaftaran akun</p>
     </main>
 </body>
 </html>

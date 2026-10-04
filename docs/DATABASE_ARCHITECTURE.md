@@ -1,7 +1,7 @@
 # Database Architecture & Entity Relationship Diagram (ERD)
-## Stokora — Multi-Warehouse Inventory & Order Management System
+## SIMANIS — Sistem Manajemen Inventaris & Multi-Warehouse Order System
 
-Dokumen ini menjelaskan arsitektur database relasional lengkap untuk mengakomodir seluruh menu dan alur operasional sistem Stokora: **Manajemen User (SOD Matrix)**, **Master Data (Produk, Kategori, Gudang, Supplier, Customer)**, **Sales Orders (SO)**, **Purchase Orders (PO)**, **Goods Receipt & Issue**, serta **Stock Ledger Multigudang (Audit Trail)**.
+Dokumen ini menjelaskan arsitektur database relasional lengkap untuk mengakomodir seluruh menu dan alur operasional sistem SIMANIS: **Manajemen User (SOD Matrix)**, **Master Data (Produk, Kategori, Gudang, Supplier, Customer)**, **Sales Orders (SO)**, **Purchase Orders (PO)**, **Goods Receipt & Issue**, serta **Stock Ledger Multigudang (Audit Trail)**.
 
 ---
 
@@ -304,7 +304,7 @@ erDiagram
 File DDL lengkap tersedia di: [`database/schema.sql`](file:///d:/Learn/Web/database/schema.sql).
 
 ```sql
--- DDL Lengkap Sistem Inventaris Multigudang Stokora
+-- DDL Lengkap Sistem Inventaris Multigudang SIMANIS
 -- Sesuai dengan spesifikasi ERD di atas
 
 SET FOREIGN_KEY_CHECKS = 0;

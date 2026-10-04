@@ -1,6 +1,6 @@
 # Dokumen Perencanaan: Scope, User Stories & Backlog
 
-**Proyek**: Inventory & Order Management System (STOKORA)  
+**Proyek**: SIMANIS (Sistem Manajemen Inventaris & Order Management System)  
 **Program**: Intermediate Programmer Final Project — PT Neuronworks Indonesia  
 **Tanggal**: Oktober 2026  
 

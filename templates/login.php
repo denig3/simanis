@@ -4,15 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="<?= htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') ?>">
-    <title>Login - Inventory &amp; Order</title>
+    <title>Login — SIMANIS (Sistem Manajemen Inventaris)</title>
     <link rel="stylesheet" href="/assets/app.css?v=<?= time() ?>">
     <script src="/assets/app.js?v=<?= time() ?>" defer></script>
 </head>
-<body>
+<body class="auth-body">
     <main class="login-container">
-        <div class="app-mark" aria-hidden="true">IO</div>
-        <h1>Inventory &amp; Order Management</h1>
-        <p class="muted">Proyek pengelolaan stok dan pesanan.</p>
+        <h1>SIMANIS</h1>
+        <p class="muted">Sistem Manajemen Inventaris</p>
         <section class="panel" aria-labelledby="login-title">
             <h2 id="login-title">Login</h2>
             <p class="muted">Masuk menggunakan akun yang sudah dibuat.</p>
@@ -37,9 +36,30 @@
             </form>
 
             <p class="help-text">Belum punya akun? <a href="/register">Daftar</a></p>
-            <p class="help-text">Email: admin@example.com | Password: Admin12345678!</p>
+            <div class="demo-accounts" aria-label="Akun demo per peran">
+                <p class="demo-title">Akun demo (klik "Pakai" untuk mengisi form)</p>
+                <?php foreach ([
+                    ['Admin', 'admin@example.com', 'Admin12345678!'],
+                    ['Sales', 'sales@example.com', 'Sales12345678!'],
+                    ['Gudang', 'warehouse@example.com', 'Warehouse12345678!'],
+                ] as [$demoRole, $demoEmail, $demoPassword]): ?>
+                    <div class="demo-row">
+                        <span class="demo-role"><?= htmlspecialchars($demoRole, ENT_QUOTES, 'UTF-8') ?></span>
+                        <span class="demo-cred"><code><?= htmlspecialchars($demoEmail, ENT_QUOTES, 'UTF-8') ?></code><code><?= htmlspecialchars($demoPassword, ENT_QUOTES, 'UTF-8') ?></code></span>
+                        <button type="button" class="demo-fill secondary-button" data-email="<?= htmlspecialchars($demoEmail, ENT_QUOTES, 'UTF-8') ?>" data-password="<?= htmlspecialchars($demoPassword, ENT_QUOTES, 'UTF-8') ?>">Pakai</button>
+                    </div>
+                <?php endforeach; ?>
+            </div>
         </section>
-        <p class="footer-note"><span class="phase-label">Fase 1</span> Login dan dashboard awal</p>
     </main>
+    <script>
+        document.querySelectorAll('.demo-fill').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.getElementById('email').value = btn.dataset.email;
+                document.getElementById('password').value = btn.dataset.password;
+                document.getElementById('login-button').focus();
+            });
+        });
+    </script>
 </body>
 </html>

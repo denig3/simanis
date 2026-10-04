@@ -1,0 +1,247 @@
+================================================================================
+STANDARD OPERATING PROCEDURE (SOP) OPERASIONAL SISTEM
+PT SIMANIS MULTI NIAGA INDONESIA
+Sistem Manajemen Rantai Pasok, Multi-Gudang, & Pengendalian Pesanan (SIMANIS)
+Dokumen Ref: SOP-SMN-2026-001 | Versi: 2.4 | Status: Resmi / Berlaku Efektif
+Zona Waktu: Asia/Jakarta (WIB - UTC+7)
+================================================================================
+
+I. PENDAHULUAN & TUJUAN
+--------------------------------------------------------------------------------
+Dokumen Standard Operating Procedure (SOP) ini disusun sebagai pedoman operasional
+baku dalam memanfaatkan seluruh modul dan fitur pada aplikasi web SIMANIS (Sistem Manajemen Inventaris).
+Tujuan utama dari prosedur ini adalah:
+1. Menjamin pemisahan wewenang (Segregation of Duties - SOD) antara divisi Sales,
+   Gudang (Logistik), dan Manajemen (Admin System).
+2. Memastikan akurasi pencatatan stok fisik multi-lokasi (Gudang Jakarta & Surabaya).
+3. Mencegah terjadinya kekurangan stok (oversell) melalui transaksi database ACID
+   dan audit trail mutasi barang secara real-time pada Stock Ledger.
+4. Memberikan alur kerja end-to-end yang jelas dari pengadaan barang (PO & GR),
+   penjualan produk (SO), hingga pengiriman barang ke pelanggan (GI).
+
+II. MATRIKS HAK AKSES & PEMISAHAN TUGAS (SOD MATRIX)
+--------------------------------------------------------------------------------
++-----------------------+---------------+-----------------+--------------------+
+| Modul / Fungsi        | Admin System  | Sales Staff     | Staff Gudang       |
++-----------------------+---------------+-----------------+--------------------+
+| Manajemen Pengguna    | Penuh (CRUD)  | Tidak Ada Akses | Tidak Ada Akses    |
+| Master Data Produk    | Penuh (CRUD)  | Lihat Katalog   | Lihat Stok & Rak   |
+| Master Kategori       | Penuh (CRUD)  | Tidak Ada Akses | Tidak Ada Akses    |
+| Master Multi-Gudang   | Penuh (CRUD)  | Tidak Ada Akses | Tidak Ada Akses    |
+| Master Supplier       | Penuh (CRUD)  | Tidak Ada Akses | Tidak Ada Akses    |
+| Master Customer       | Penuh (CRUD)  | Tambah / Edit   | Lihat Data Kirim   |
+| Buat Sales Order (SO) | Ya            | Ya (Wewenang)   | Dilarang (Tolak)   |
+| Setujui SO (Approve)  | Ya (Wewenang) | Dilarang (Tolak)| Dilarang (Tolak)   |
+| Goods Issue (Kirim)   | Ya            | Dilarang (Tolak)| Ya (Wewenang Utama)|
+| Buat Purchase Order   | Ya            | Dilarang (Tolak)| Ya (Usulan PO)     |
+| Terbitkan PO (Order)  | Ya            | Dilarang (Tolak)| Ya                 |
+| Goods Receipt (Terima)| Ya            | Dilarang (Tolak)| Ya (Wewenang Utama)|
+| Kartu Stok Ledger     | Audit Penuh   | Terbatas        | Audit Fisik        |
+| Ekspor Laporan CSV    | Semua Laporan | Laporan Sales   | Laporan Gudang     |
++-----------------------+---------------+-----------------+--------------------+
+
+III. SKENARIO USECASE REAL (END-TO-END BUSINESS FLOW)
+--------------------------------------------------------------------------------
+Studi Kasus: PT SIMANIS Multi Niaga Indonesia mendistribusikan produk elektronik
+kantor. Skenario mencakup siklus lengkap: penambahan user baru, pengadaan barang
+masuk karena stok menipis, penjualan ke customer B2B, pengiriman fisik, hingga
+audit laporan kartu stok.
+
+================================================================================
+FASE 1: SETUP ADMINISTRASI & PENGELOLAAN MASTER DATA
+Pelaksana: Admin System
+================================================================================
+Langkah 1.1: Autentikasi Pengguna
+1. Buka peramban (browser) dan akses alamat sistem (contoh: http://localhost:8080).
+2. Pada halaman Login, masukkan:
+   - Email    : admin@simanis.id
+   - Password : password123
+3. Klik tombol "Lihat" untuk memeriksa ejaan password bila diperlukan.
+4. Klik tombol "Masuk". Sistem akan mengarahkan pengguna ke Dashboard Utama.
+
+Langkah 1.2: Pendaftaran & Pengaturan Pegawai Baru (SOD Matrix)
+1. Pilih menu navigasi "Manajemen User" pada sidebar kiri.
+2. Klik tombol "+ Tambah Pengguna Baru".
+3. Isi formulir modal:
+   - Nama Lengkap    : Joko Logistik
+   - Alamat Email    : joko.gudang@simanis.id
+   - Kata Sandi      : Rahasia123!
+   - Peran (Role)    : Staff Gudang (Warehouse)
+   - Penempatan Lokasi : Gudang Utama Jakarta
+4. Klik "Simpan Pengguna". Data pegawai baru langsung aktif di database.
+5. Bila terjadi mutasi peran, klik tombol "Edit Role" pada baris user untuk mengubah
+   status (Aktif / Nonaktif) atau mengganti hak akses.
+
+Langkah 1.3: Pemeliharaan Master Data & Multi-Gudang
+1. Pilih menu navigasi "Master Data & Gudang".
+2. Buka sub-tab "🏭 Daftar Supplier":
+   - Klik "+ Tambah Supplier" jika ada mitra prinsipal baru.
+   - Masukkan Kode Pemasok (contoh: SUP-004), Nama Perusahaan, Kontak, Telepon, dan Alamat.
+3. Buka sub-tab "🏢 Lokasi Gudang":
+   - Verifikasi titik gudang aktif (Gudang Utama Jakarta & Gudang Surabaya).
+4. Buka sub-tab "📦 Katalog Produk":
+   - Periksa daftar SKU, batas minimum stok (Min Threshold), dan harga beli/jual.
+   - Klik "+ Tambah Produk" bila ada barang baru, isi Harga Beli (Rp) dan Jual (Rp).
+5. Klik tombol "📥 Ekspor Produk (CSV)" untuk mengunduh arsip katalog cadangan.
+
+================================================================================
+FASE 2: PENGADAAN BARANG MASUK (PURCHASE ORDER & GOODS RECEIPT)
+Pelaksana: Staff Gudang (atau Admin System)
+Kasus: Stok "Monitor 27 Inch" di Gudang Utama Jakarta menipis di bawah ambang batas.
+================================================================================
+Langkah 2.1: Identifikasi Kebutuhan Stok
+1. Beralih peran ke "Staff Gudang" melalui Topbar Role Switcher.
+2. Pada Ringkasan Dashboard, perhatikan widget "Stok Menipis / Kritis" bertanda merah.
+3. Klik tombol "📋 Usulkan PO" pada tabel produk yang menipis atau klik menu
+   "Purchase Orders & GR" di sidebar navigasi.
+
+Langkah 2.2: Pembuatan Purchase Order (PO) Baru
+1. Pada halaman Purchase Orders, klik tombol "🚛 Buat Purchase Order (PO) Baru".
+2. Modal input berukuran ekstra lebar (1050px) akan terbuka.
+3. Lengkapi field pengadaan:
+   - Pilih Supplier / Pemasok : PT Supplier Utama Indonesia (SUP-001)
+   - Pilih Gudang Tujuan      : Gudang Utama Jakarta (WH-JKT)
+4. Pada tabel item produk:
+   - Pilih Produk             : Monitor 27 Inch (PRD-MON-27)
+   - Kuantitas Pengadaan      : 20 unit
+   - Harga Beli Satuan        : Rp 3.200.000 (Otomatis terisi dari katalog master)
+   - Klik "➕ Tambah Baris Produk" jika ingin menambahkan barang lain dalam satu PO.
+5. Periksa banner "Estimasi Total Nilai Pengadaan": Rp 64.000.000.
+6. Masukkan Catatan Pengadaan: "Pengiriman via truk ekspedisi supplier estimasi 2 hari kerja."
+7. Pilih tindakan:
+   - Klik "💾 Simpan sebagai Draft" jika ingin mengajukan tinjauan anggaran terlebih dahulu.
+   - Klik "🚀 Terbitkan & Pesan ke Supplier" untuk langsung mengirimkan PO resmi.
+
+Langkah 2.3: Penerimaan Fisik Barang Masuk (Goods Receipt)
+1. Setelah armada supplier tiba di gudang fisik membawa surat jalan dan fisik barang:
+2. Buka menu "Purchase Orders & GR".
+3. Temukan baris No. PO terkait (contoh: #PO-2026-003).
+4. Klik tombol "👁️ Detail" untuk memeriksa kecocokan item pesanan:
+   - Pastikan Qty Dipesan: 20 unit, Qty Diterima sebelumnya: 0 unit.
+5. Klik tombol "📥 Catat Goods Receipt (Penerimaan Barang)" baik dari dalam modal
+   detail atau langsung dari tombol aksi tabel.
+6. Muncul konfirmasi dialog sistem:
+   "Konfirmasi pencatatan penerimaan fisik barang (Goods Receipt) untuk PO #...?
+    Stok gudang akan bertambah secara atomik dan dicatat di Stock Ledger."
+7. Klik "OK" (Setuju).
+8. Sistem mengeksekusi transaksi ACID di MySQL:
+   - Status PO diperbarui menjadi "goods_received".
+   - Stok fisik pada Gudang Utama Jakarta bertambah +20 unit secara otomatis.
+   - Tercatat mutasi masuk bertipe "GOODS_RECEIPT" dengan kuantitas +20 pada tabel audit stock_ledger.
+
+================================================================================
+FASE 3: ORDER PENJUALAN B2B & PENEGAKAN SOD (SALES ORDER WORKFLOW)
+Pelaksana: Sales Staff (Pembuat) & Admin System (Penyetuju)
+Kasus: Customer "PT Maju Bersama Sejahtera" memesan 5 unit Laptop dan 10 unit Keyboard.
+================================================================================
+Langkah 3.1: Pembuatan Sales Order oleh Sales Staff
+1. Beralih peran ke "Sales Staff" melalui Topbar Switcher (atau login akun sales).
+2. Perhatikan menu "Purchase Orders" otomatis disembunyikan untuk menjaga fokus SOD.
+3. Buka menu "Sales Orders (SO)".
+4. Klik tombol "🛍️ Buat Sales Order (SO) Baru".
+5. Isi formulir modal Sales Order:
+   - Pilih Customer         : PT Maju Bersama Sejahtera (CUST-001)
+   - Pilih Gudang Asal      : Gudang Utama Jakarta (WH-JKT)
+6. Tambah item barang:
+   - Baris 1: Produk Laptop Komersial (PRD-LAP-01) | Qty: 5  | Harga: Rp 15.000.000
+   - Klik "➕ Tambah Baris Produk"
+   - Baris 2: Keyboard Mekanikal (PRD-KEY-03)       | Qty: 10 | Harga: Rp 850.000
+7. Sistem otomatis menghitung subtotal dan menampilkan Estimasi Nilai: Rp 83.500.000.
+8. Masukkan Catatan: "Kirim segera sebelum tanggal 10, lampirkan faktur pajak."
+9. Klik tombol "🚀 Simpan & Ajukan (Pending Approval)".
+10. Sales Order tersimpan di sistem dengan status "pending_approval".
+    PENTING (SOD Rule): Sales Staff TIDAK DAPAT menyetujui order buatannya sendiri.
+    Tombol yang tersedia bagi Sales hanyalah "👁️ Detail" dan "❌ Batal".
+
+Langkah 3.2: Peninjauan & Persetujuan oleh Admin (Approval Stage)
+1. Beralih peran kembali ke "Admin System".
+2. Buka menu "Sales Orders (SO)".
+3. Temukan baris SO yang baru dibuat dengan badge status kuning ("pending_approval").
+4. Tombol aksi yang aktif bagi Admin:
+   - "👁️ Detail"  : Melihat rincian pelanggan, margin harga, dan kuantitas.
+   - "✅ Setujui" : Memberikan approval resmi untuk pemenuhan gudang.
+   - "❌ Tolak"   : Menolak pesanan dengan wajib memasukkan alasan penolakan
+                   (contoh: kuota kredit melebihi batas atau spek tidak tersedia).
+5. Klik tombol "✅ Setujui".
+6. Status Sales Order seketika berubah menjadi "approved" (badge biru).
+   Notifikasi muncul: "Sales Order disetujui. Siap diproses Goods Issue oleh Staff Gudang."
+
+================================================================================
+FASE 4: PEMENUHAN ORDER & PENGELUARAN FISIK (GOODS ISSUE WORKFLOW)
+Pelaksana: Staff Gudang
+================================================================================
+Langkah 4.1: Pengambilan Barang di Gudang (Picking & Packing)
+1. Beralih peran ke "Staff Gudang".
+2. Pada Ringkasan Dashboard Staff Gudang, perhatikan kartu antrean:
+   "Siap Diproses Goods Issue (Approved)" menampilkan jumlah order yang siap kirim.
+3. Buka tab "Sales Orders (SO)".
+4. Temukan order berstatus "approved".
+5. Klik "👁️ Detail" untuk mencetak / mencocokkan item picking list:
+   - 5 unit Laptop Komersial
+   - 10 unit Keyboard Mekanikal
+6. Petugas gudang mengambil fisik barang dari rak dan melakukan packing.
+
+Langkah 4.2: Pemotongan Stok Atomik (Goods Issue Execution)
+1. Pada baris tabel SO atau di dalam modal detail, klik tombol:
+   "📦 Goods Issue (Kirim Barang)".
+2. Sistem menjalankan algoritma mutasi transaksi database (Pessimistic Locking):
+   - Menjalankan `SELECT ... FOR UPDATE` pada tabel `inventory_stocks` untuk mengunci
+     stok di baris Gudang Utama Jakarta.
+   - Memvalidasi secara ketat: Apakah kuantitas fisik mencukupi?
+     Jika stok kurang, sistem secara otomatis melempar `InsufficientStockException`
+     dan membatalkan (ROLLBACK) seluruh transaksi untuk mencegah stok bernilai minus.
+   - Jika stok cukup, sistem memotong stok Laptop (-5) dan Keyboard (-10).
+   - Mencatat mutasi keluar pada `stock_ledger` dengan movement_type "GOODS_ISSUE".
+   - Status Sales Order diubah menjadi "fulfilled" (badge hijau).
+3. Notifikasi toast muncul: "Goods Issue sukses! Stok terpotong atomik dan tercatat di Stock Ledger."
+
+================================================================================
+FASE 5: PENGAWASAN, AUDIT TRAIL, & EKSPOR LAPORAN
+Pelaksana: Admin System / Auditor Internal / Manajemen
+================================================================================
+Langkah 5.1: Pemeriksaan Kartu Stok (Stock Ledger)
+1. Buka menu navigasi "Stock Ledger Multi-Gudang".
+2. Tabel kartu stok menampilkan riwayat kronologis lengkap dari setiap mutasi barang:
+   - Waktu Mutasi (WIB: UTC+7)
+   - SKU & Nama Barang
+   - Lokasi Gudang
+   - Tipe Mutasi:
+     * GOODS_RECEIPT (+Qty masuk warna hijau)
+     * GOODS_ISSUE   (-Qty keluar warna merah)
+   - Saldo Akhir Komputasi (Balance After)
+   - Identitas Petugas Pembuat
+3. Pastikan tidak ada selisih antara pergerakan fisik di gudang dengan catatan ledger.
+
+Langkah 5.2: Pengunduhan Berkas Resmi (Ekspor CSV Berbasis Database)
+1. Untuk keperluan rekonsiliasi akuntansi bulanan dan audit stok opname:
+   - Pada halaman Dashboard Admin: Klik "📥 Ekspor Ringkasan (CSV)"
+   - Pada halaman Master Data    : Klik "📥 Ekspor Master Produk (CSV)",
+                                   "📥 Ekspor Supplier (CSV)", dsb.
+   - Pada halaman Sales Orders   : Klik "📥 Ekspor SO (CSV)"
+   - Pada halaman Purchase Order : Klik "📥 Ekspor PO (CSV)"
+   - Pada halaman Stock Ledger   : Klik "📥 Ekspor Kartu Stok (CSV)"
+2. File CSV yang dihasilkan otomatis diberi nama baku (contoh: `daftar_sales_orders.csv`,
+   `kartu_stok_ledger_audit.csv`) dan dapat langsung dibuka di Microsoft Excel / Google Sheets.
+
+IV. PENANGANAN KENDALA & TROUBLESHOOTING OPERASIONAL
+--------------------------------------------------------------------------------
+1. Kendala: Percobaan pengiriman pesanan gagal dengan pesan "Stok tidak mencukupi".
+   Solusi : Stok fisik di gudang tersebut telah dialokasikan untuk pesanan lain
+            atau stok riil habis. Staff Gudang harus membuat Purchase Order (PO)
+            terlebih dahulu atau memindahkan alokasi dari gudang lain.
+2. Kendala: Sales Staff mengklik tombol terbitkan PO tetapi muncul "Akses Ditolak".
+   Solusi : Sistem menegakkan aturan Segregation of Duties (SOD). Pengadaan PO
+            hanya dapat diterbitkan oleh Staff Gudang atau Admin System.
+3. Kendala: Waktu transaksi berbeda dengan jam dinding kantor.
+   Solusi : Pastikan server telah tersinkronisasi ke zona waktu Asia/Jakarta (WIB).
+            Aplikasi SIMANIS telah dikonfigurasi permanen pada PHP dan MySQL
+            menggunakan time zone +07:00 (Waktu Indonesia Barat).
+
+V. PENGESAHAN DOKUMEN SOP
+--------------------------------------------------------------------------------
+Dibuat Oleh       : Tim Arsitektur Sistem Informasi (Antigravity AI)
+Ditinjau Oleh     : Manajer Operasional & Logistik
+Disetujui Oleh    : Direktur Operasional PT SIMANIS Multi Niaga Indonesia
+Tanggal Berlaku   : 04 Oktober 2026
+Masa Berlaku      : 1 (Satu) Tahun / Sampai Revisi Berikutnya
+================================================================================

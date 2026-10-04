@@ -1,4 +1,4 @@
-# STOKORA — Inventory & Order Management System
+# SIMANIS — Sistem Manajemen Inventaris & Order System
 
 Sistem manajemen inventaris dan pesanan multi-gudang berbasis **PHP 8.2+ Native OOP (Clean Layered Architecture)**, **MySQL 8 (InnoDB with ACID Transactions & Pessimistic Locking)**, **Semantic HTML5 & Vanilla CSS (Handcrafted)**, serta **Vanilla JavaScript (Fetch API)**.
 

@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 use App\Infrastructure\Database;
 
-require dirname(__DIR__) . '/vendor/autoload.php';
+require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 /** @return array{status: int, body: string, headers: list<string>} */
 function request(string $path, string $method = 'GET', string $body = '', string $csrf = ''): array

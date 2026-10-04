@@ -30,20 +30,19 @@ final class DashboardController extends BaseController
 
         $data = $this->dashboardService->getDashboardData();
 
-        $usersList = $data['usersList'];
-        $warehousesList = $data['warehousesList'];
-        $categoriesList = $data['categoriesList'];
-        $suppliersList = $data['suppliersList'];
-        $customersList = $data['customersList'];
-        $productsStockSummary = $data['productsStockSummary'];
-        $salesOrdersList = $data['salesOrdersList'];
-        $purchaseOrdersList = $data['purchaseOrdersList'];
-        $stockLedgerList = $data['stockLedgerList'];
-        $pendingSOCount = $data['pendingSOCount'];
-        $waitingPOCount = $data['waitingPOCount'];
-        $criticalStockCount = $data['criticalStockCount'];
-        $readyGICount = $data['readyGICount'];
+        $this->renderDashboard('dashboard.php', [
+            'data' => $data,
+            'user' => $user,
+            'csrf' => $csrf,
+        ]);
+    }
 
-        require dirname(__DIR__, 2) . '/templates/dashboard.php';
+    /**
+     * @param array<string, mixed> $params
+     */
+    private function renderDashboard(string $template, array $params): void
+    {
+        extract($params, EXTR_SKIP);
+        require_once dirname(__DIR__, 2) . '/templates/' . $template;
     }
 }
