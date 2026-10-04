@@ -1896,7 +1896,7 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
 
     <!-- Modal Buat Sales Order Baru (SO) -->
     <div id="modal-add-so" class="modal-overlay" hidden>
-        <div class="modal-card" style="max-width: 820px;">
+        <div class="modal-card modal-card-xl">
             <div class="modal-header">
                 <h3>📝 Buat Sales Order (SO) Baru</h3>
                 <button type="button" class="modal-close-btn" id="btn-close-add-so" title="Tutup Modal">&times;</button>
@@ -1905,10 +1905,10 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                 <form id="form-add-so">
                     <div id="add-so-error" class="form-message" role="alert" hidden style="margin-bottom: 14px;"></div>
 
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
                         <div class="field">
-                            <label for="new-so-customer" style="display:block; font-weight:600; margin-bottom: 4px;">Pilih Customer <span class="text-danger">*</span></label>
-                            <select id="new-so-customer" name="customer_id" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #fff;" required>
+                            <label for="new-so-customer" style="display:block; font-weight:600; margin-bottom: 6px;">Pilih Customer <span class="text-danger">*</span></label>
+                            <select id="new-so-customer" name="customer_id" class="input" style="width:100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #fff;" required>
                                 <option value="">-- Pilih Customer --</option>
                                 <?php foreach ($customersList as $c): ?>
                                     <option value="<?= (int)$c['id'] ?>"><?= $escape((string)$c['name']) ?> (<?= $escape((string)$c['code']) ?>)</option>
@@ -1916,8 +1916,8 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                             </select>
                         </div>
                         <div class="field">
-                            <label for="new-so-warehouse" style="display:block; font-weight:600; margin-bottom: 4px;">Pilih Gudang Pengiriman <span class="text-danger">*</span></label>
-                            <select id="new-so-warehouse" name="warehouse_id" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #fff;" required>
+                            <label for="new-so-warehouse" style="display:block; font-weight:600; margin-bottom: 6px;">Pilih Gudang Pengiriman <span class="text-danger">*</span></label>
+                            <select id="new-so-warehouse" name="warehouse_id" class="input" style="width:100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #fff;" required>
                                 <option value="">-- Pilih Gudang Pengiriman --</option>
                                 <?php foreach ($warehousesList as $w): ?>
                                     <option value="<?= (int)$w['id'] ?>"><?= $escape((string)$w['name']) ?> (<?= $escape((string)$w['code']) ?> - <?= $escape((string)$w['city']) ?>)</option>
@@ -1927,20 +1927,22 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                     </div>
 
                     <!-- Tabel Item Produk Dinamis -->
-                    <div class="field" style="margin-bottom: 14px;">
-                        <label style="display:flex; justify-content:space-between; align-items:center; font-weight:600; margin-bottom: 6px;">
-                            <span>Daftar Item Barang / Produk <span class="text-danger">*</span></span>
-                            <button type="button" class="btn-sm btn-secondary" id="btn-add-so-item-row">➕ Tambah Baris Produk</button>
-                        </label>
-                        <div class="table-responsive" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                    <div class="field" style="margin-bottom: 16px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                            <label style="font-weight:600; font-size: 14px; margin: 0;">
+                                Daftar Item Barang / Produk <span class="text-danger">*</span>
+                            </label>
+                            <button type="button" class="btn-sm btn-secondary" id="btn-add-so-item-row" style="padding: 6px 12px; font-weight: 600;">➕ Tambah Baris Produk</button>
+                        </div>
+                        <div class="table-responsive" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); max-height: 280px; overflow-y: auto;">
                             <table class="data-table" style="margin: 0; width: 100%;">
                                 <thead>
                                     <tr>
-                                        <th style="min-width: 250px;">Produk (SKU / Nama)</th>
-                                        <th style="width: 100px;">Qty</th>
-                                        <th style="width: 160px;">Harga Satuan (Rp)</th>
-                                        <th style="width: 150px;">Subtotal (Rp)</th>
-                                        <th style="width: 45px; text-align: center;">Aksi</th>
+                                        <th style="min-width: 320px;">Produk (SKU / Nama / Stok Gudang)</th>
+                                        <th style="width: 110px; text-align: right;">Kuantitas</th>
+                                        <th style="width: 180px; text-align: right;">Harga Satuan (Rp)</th>
+                                        <th style="width: 180px; text-align: right;">Subtotal (Rp)</th>
+                                        <th style="width: 50px; text-align: center;">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody id="so-items-tbody">
@@ -1951,26 +1953,26 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                     </div>
 
                     <!-- Grand Total Banner -->
-                    <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                    <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                         <div>
                             <span class="text-muted" style="font-size: 13px;">Estimasi Total Nilai Sales Order:</span>
-                            <div style="font-size: 20px; font-weight: 700; color: var(--color-primary);" id="so-grand-total-text">Rp 0</div>
+                            <div style="font-size: 24px; font-weight: 700; color: var(--color-primary);" id="so-grand-total-text">Rp 0</div>
                         </div>
-                        <div class="text-muted" style="font-size: 12px; text-align: right;">
-                            Aturan SOD: Sales membuat Draft &rarr; Diajukan ke Admin &rarr; Diproses Gudang
+                        <div class="text-muted" style="font-size: 12.5px; text-align: right; line-height: 1.5;">
+                            🔒 <strong>Penegakan Aturan SOD:</strong><br>Sales membuat Draft &rarr; Diajukan ke Admin &rarr; Diproses Gudang
                         </div>
                     </div>
 
-                    <div class="field" style="margin-bottom: 14px;">
-                        <label for="new-so-notes" style="display:block; font-weight:600; margin-bottom: 4px;">Catatan Order (Opsional)</label>
-                        <textarea id="new-so-notes" name="notes" class="input" style="width:100%; height:60px; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="Contoh: Pengiriman prioritas sebelum akhir bulan"></textarea>
+                    <div class="field" style="margin-bottom: 16px;">
+                        <label for="new-so-notes" style="display:block; font-weight:600; margin-bottom: 6px;">Catatan Order (Opsional)</label>
+                        <textarea id="new-so-notes" name="notes" class="input" style="width:100%; height:65px; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="Contoh: Pengiriman prioritas sebelum akhir bulan"></textarea>
                     </div>
 
                     <div class="modal-actions-bar">
                         <button type="button" class="modal-btn modal-btn-secondary" id="btn-cancel-add-so">Batal</button>
-                        <div class="modal-actions-right" style="display: flex; gap: 8px;">
-                            <button type="button" class="modal-btn modal-btn-secondary" id="btn-save-draft-so" style="border: 1px solid var(--border-color);">💾 Simpan sebagai Draft</button>
-                            <button type="submit" class="modal-btn modal-btn-primary" id="btn-submit-approval-so">🚀 Simpan &amp; Ajukan (Pending Approval)</button>
+                        <div class="modal-actions-right" style="display: flex; gap: 10px;">
+                            <button type="button" class="modal-btn modal-btn-secondary" id="btn-save-draft-so" style="border: 1px solid var(--border-color); font-weight:600;">💾 Simpan sebagai Draft</button>
+                            <button type="submit" class="modal-btn modal-btn-primary" id="btn-submit-approval-so" style="font-weight:600;">🚀 Simpan &amp; Ajukan (Pending Approval)</button>
                         </div>
                     </div>
                 </form>
@@ -1980,7 +1982,7 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
 
     <!-- Modal Detail Sales Order (Rincian Item & Riwayat) -->
     <div id="modal-detail-so" class="modal-overlay" hidden>
-        <div class="modal-card" style="max-width: 820px;">
+        <div class="modal-card modal-card-xl">
             <div class="modal-header">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <h3 id="detail-so-title">📦 Detail Sales Order</h3>

@@ -1462,21 +1462,21 @@ function initSalesOrderModals() {
 
         tr.innerHTML = `
             <td>
-                <select class="input so-item-product" style="width:100%; padding: 6px 10px; font-size:13px; border-radius: var(--radius-sm);" required>
+                <select class="input so-item-product" style="width:100%; padding: 8px 12px; font-size:13.5px; border-radius: var(--radius-sm); background:#fff;" required>
                     ${optionsHtml}
                 </select>
             </td>
             <td>
-                <input type="number" class="input so-item-qty" min="1" value="${qty}" style="width:100%; padding: 6px 8px; font-size:13px; border-radius: var(--radius-sm); text-align:right;" required>
+                <input type="number" class="input so-item-qty" min="1" value="${qty}" style="width:100%; padding: 8px 10px; font-size:13.5px; border-radius: var(--radius-sm); text-align:right;" required>
             </td>
             <td>
-                <input type="number" class="input so-item-price" min="0" step="500" value="0" style="width:100%; padding: 6px 8px; font-size:13px; border-radius: var(--radius-sm); text-align:right;" required>
+                <input type="number" class="input so-item-price" min="0" step="500" value="0" style="width:100%; padding: 8px 10px; font-size:13.5px; border-radius: var(--radius-sm); text-align:right;" required>
             </td>
-            <td style="text-align:right; font-weight:600; font-size:13px;" class="so-item-subtotal-cell">
+            <td style="text-align:right; font-weight:700; font-size:14px; color:var(--text-primary); padding-right:12px;" class="so-item-subtotal-cell">
                 Rp 0
             </td>
             <td style="text-align:center;">
-                <button type="button" class="btn-sm btn-danger btn-remove-row" style="padding: 2px 8px; font-size: 13px;" title="Hapus Baris">&times;</button>
+                <button type="button" class="btn-sm btn-danger btn-remove-row" style="padding: 4px 10px; font-size: 14px; border-radius:4px;" title="Hapus Baris">&times;</button>
             </td>
         `;
 

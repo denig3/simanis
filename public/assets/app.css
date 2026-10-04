@@ -1160,10 +1160,20 @@ button:active {
     box-shadow: var(--shadow-lg);
     width: 100%;
     max-width: 540px;
-    max-height: 88vh;
+    max-height: 90vh;
     display: flex;
     flex-direction: column;
     animation: slideUpModal 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-card-lg {
+    max-width: 860px;
+    width: 92vw;
+}
+
+.modal-card-xl {
+    max-width: 1100px;
+    width: 95vw;
 }
 
 @keyframes slideUpModal {
