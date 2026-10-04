@@ -77,19 +77,20 @@ Pengujian unit dijalankan menggunakan **In-Memory Fake Repository** (`InMemoryOr
 ```bash
 docker compose exec app vendor/bin/phpunit --testsuite Unit
 ```
-*Hasil: 24 tests, 82 assertions, 100% lulus dalam < 1 detik.*
+*Hasil: 26 tests, 115 assertions, 100% lulus dalam < 1 detik.*
 
 ### 4.2 Menjalankan Integration Test (MySQL Docker Nyata — TEST-02 & ARCH-02)
 Pengujian integrasi menguji transaksi database ACID nyata, Goods Receipt, Goods Issue, dan skenario penolakan stok saat *race condition* (anti-oversell):
 ```bash
 docker compose exec app vendor/bin/phpunit --testsuite Integration
 ```
-*Hasil: 3 tests, 9 assertions, 100% lulus.*
+*Hasil: 5 tests, 32 assertions, 100% lulus.*
 
 ### 4.3 Menjalankan Seluruh Test Sekaligus (Satu Perintah)
 ```bash
 docker compose exec app vendor/bin/phpunit
 ```
+*Hasil: 31 tests, 147 assertions, 100% lulus.*
 
 ### 4.4 Menjalankan Analisis Statis Kode (PHPStan Level 6 — TEST-03)
 ```bash
