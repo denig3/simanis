@@ -54,8 +54,7 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 // Security Headers
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
-header('Referrer-Policy: same-origin');
-header("Content-Security-Policy: default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
+header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
 
 Session::start();
 

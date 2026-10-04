@@ -1829,13 +1829,13 @@ function renderSalesOrderActions() {
         const act = tr.querySelector('.action-cell') || tr.querySelector(`#so-action-${id}`);
         if (!act) return;
 
-        let buttons = `<button type="button" class="btn-sm btn-secondary" onclick="SimulasiModule.viewSODetail('${id}')" title="Lihat Rincian Pesanan">👁️ Detail</button> `;
+        let buttons = `<button type="button" class="btn-sm btn-secondary" data-action="view-so-detail" data-so-id="${id}" onclick="SimulasiModule.viewSODetail('${id}')" title="Lihat Rincian Pesanan">👁️ Detail</button> `;
 
         if (status === 'draft') {
             if (role === 'admin' || role === 'sales') {
                 buttons += `
-                    <button type="button" class="btn-sm btn-primary" onclick="SimulasiModule.submitSO('${id}')" title="Ajukan ke Admin untuk ditinjau">🚀 Ajukan</button>
-                    <button type="button" class="btn-sm btn-danger" onclick="SimulasiModule.cancelSO('${id}')" title="Batalkan order draft">❌ Batal</button>
+                    <button type="button" class="btn-sm btn-primary" data-action="submit-so" data-so-id="${id}" onclick="SimulasiModule.submitSO('${id}')" title="Ajukan ke Admin untuk ditinjau">🚀 Ajukan</button>
+                    <button type="button" class="btn-sm btn-danger" data-action="cancel-so" data-so-id="${id}" onclick="SimulasiModule.cancelSO('${id}')" title="Batalkan order draft">❌ Batal</button>
                 `;
             } else {
                 buttons += `<span class="text-muted"><small>Draft Order</small></span>`;
@@ -1843,13 +1843,13 @@ function renderSalesOrderActions() {
         } else if (status === 'pending_approval') {
             if (role === 'admin') {
                 buttons += `
-                    <button type="button" class="btn-sm btn-success" onclick="SimulasiModule.approveSO('${id}')" title="Setujui Sales Order">✅ Setujui</button>
-                    <button type="button" class="btn-sm btn-danger" onclick="SimulasiModule.rejectSO('${id}')" title="Tolak Sales Order">❌ Tolak</button>
+                    <button type="button" class="btn-sm btn-success" data-action="approve-so" data-so-id="${id}" onclick="SimulasiModule.approveSO('${id}')" title="Setujui Sales Order">✅ Setujui</button>
+                    <button type="button" class="btn-sm btn-danger" data-action="reject-so" data-so-id="${id}" onclick="SimulasiModule.rejectSO('${id}')" title="Tolak Sales Order">❌ Tolak</button>
                 `;
             } else if (role === 'sales') {
                 buttons += `
                     <span class="text-amber"><small>🔒 Menunggu Admin</small></span>
-                    <button type="button" class="btn-sm btn-danger" onclick="SimulasiModule.cancelSO('${id}')" title="Batalkan pengajuan">❌ Batal</button>
+                    <button type="button" class="btn-sm btn-danger" data-action="cancel-so" data-so-id="${id}" onclick="SimulasiModule.cancelSO('${id}')" title="Batalkan pengajuan">❌ Batal</button>
                 `;
             } else if (role === 'warehouse') {
                 buttons += `<span class="text-muted"><small>🔒 Menunggu Approval Admin</small></span>`;
@@ -1857,7 +1857,7 @@ function renderSalesOrderActions() {
         } else if (status === 'approved') {
             if (role === 'warehouse' || role === 'admin') {
                 buttons += `
-                    <button type="button" class="btn-sm btn-primary" onclick="SimulasiModule.processGoodsIssue('${id}')" title="Keluarkan barang fisik & potong stok">📦 Goods Issue</button>
+                    <button type="button" class="btn-sm btn-primary" data-action="process-gi" data-so-id="${id}" onclick="SimulasiModule.processGoodsIssue('${id}')" title="Keluarkan barang fisik & potong stok">📦 Goods Issue</button>
                 `;
             } else {
                 buttons += `<span class="text-blue"><small>Disetujui. Siap kirim.</small></span>`;
@@ -1886,7 +1886,7 @@ function renderPurchaseOrderActions() {
         if (status === 'sent_to_supplier' || status === 'proposed') {
             if (role === 'warehouse' || role === 'admin') {
                 act.innerHTML = `
-                    <button class="btn-sm btn-success" onclick="SimulasiModule.processGoodsReceipt('${id}')">📥 Catat Goods Receipt (Tambah Stok)</button>
+                    <button class="btn-sm btn-success" data-action="process-gr" data-po-id="${id}" onclick="SimulasiModule.processGoodsReceipt('${id}')">📥 Catat Goods Receipt (Tambah Stok)</button>
                 `;
             } else {
                 act.innerHTML = `<span class="text-muted"><small>Hanya Staff Gudang yang dapat mencatat barang masuk.</small></span>`;
@@ -1896,6 +1896,46 @@ function renderPurchaseOrderActions() {
         }
     });
 }
+
+// Delegated Click Handler untuk semua tindakan peran (Jaminan jalan di semua browser & CSP)
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const action = btn.getAttribute('data-action');
+    const soId = btn.getAttribute('data-so-id');
+    const poId = btn.getAttribute('data-po-id');
+
+    if (!window.SimulasiModule) return;
+
+    if (action === 'view-so-detail' && soId) {
+        e.preventDefault();
+        window.SimulasiModule.viewSODetail(soId);
+    } else if (action === 'approve-so' && soId) {
+        e.preventDefault();
+        window.SimulasiModule.approveSO(soId);
+    } else if (action === 'reject-so' && soId) {
+        e.preventDefault();
+        window.SimulasiModule.rejectSO(soId);
+    } else if (action === 'submit-so' && soId) {
+        e.preventDefault();
+        window.SimulasiModule.submitSO(soId);
+    } else if (action === 'cancel-so' && soId) {
+        e.preventDefault();
+        window.SimulasiModule.cancelSO(soId);
+    } else if (action === 'process-gi' && soId) {
+        e.preventDefault();
+        window.SimulasiModule.processGoodsIssue(soId);
+    } else if (action === 'process-gr' && poId) {
+        e.preventDefault();
+        window.SimulasiModule.processGoodsReceipt(poId);
+    } else if (action === 'create-po') {
+        e.preventDefault();
+        window.SimulasiModule.createPurchaseOrder();
+    } else if (action === 'create-so') {
+        e.preventDefault();
+        window.SimulasiModule.createSalesOrder();
+    }
+});
 
 // Modul Operasi Simulasi Interaktif
 window.SimulasiModule = {
@@ -1976,25 +2016,25 @@ window.SimulasiModule = {
                 const role = AppState.currentRole;
                 if (so.status === 'draft') {
                     actContainer.innerHTML = `
-                        <button type="button" class="modal-btn modal-btn-primary" onclick="SimulasiModule.submitSO('${id}')">🚀 Ajukan Persetujuan</button>
-                        <button type="button" class="modal-btn modal-btn-danger" onclick="SimulasiModule.cancelSO('${id}')">❌ Batalkan Order</button>
+                        <button type="button" class="modal-btn modal-btn-primary" data-action="submit-so" data-so-id="${id}" onclick="SimulasiModule.submitSO('${id}')">🚀 Ajukan Persetujuan</button>
+                        <button type="button" class="modal-btn modal-btn-danger" data-action="cancel-so" data-so-id="${id}" onclick="SimulasiModule.cancelSO('${id}')">❌ Batalkan Order</button>
                     `;
                 } else if (so.status === 'pending_approval') {
                     if (role === 'admin') {
                         actContainer.innerHTML = `
-                            <button type="button" class="modal-btn modal-btn-primary" onclick="SimulasiModule.approveSO('${id}')">✅ Setujui (Approve)</button>
-                            <button type="button" class="modal-btn modal-btn-danger" onclick="SimulasiModule.rejectSO('${id}')">❌ Tolak Order</button>
+                            <button type="button" class="modal-btn modal-btn-primary" data-action="approve-so" data-so-id="${id}" onclick="SimulasiModule.approveSO('${id}')">✅ Setujui (Approve)</button>
+                            <button type="button" class="modal-btn modal-btn-danger" data-action="reject-so" data-so-id="${id}" onclick="SimulasiModule.rejectSO('${id}')">❌ Tolak Order</button>
                         `;
                     } else if (role === 'sales') {
                         actContainer.innerHTML = `
                             <span class="text-amber" style="font-size:12px; margin-right:8px; align-self:center;">🔒 Menunggu Persetujuan Admin</span>
-                            <button type="button" class="modal-btn modal-btn-danger" onclick="SimulasiModule.cancelSO('${id}')">❌ Batalkan Order</button>
+                            <button type="button" class="modal-btn modal-btn-danger" data-action="cancel-so" data-so-id="${id}" onclick="SimulasiModule.cancelSO('${id}')">❌ Batalkan Order</button>
                         `;
                     }
                 } else if (so.status === 'approved') {
                     if (role === 'warehouse' || role === 'admin') {
                         actContainer.innerHTML = `
-                            <button type="button" class="modal-btn modal-btn-primary" onclick="SimulasiModule.processGoodsIssue('${id}')">📦 Proses Goods Issue (Kirim Barang)</button>
+                            <button type="button" class="modal-btn modal-btn-primary" data-action="process-gi" data-so-id="${id}" onclick="SimulasiModule.processGoodsIssue('${id}')">📦 Proses Goods Issue (Kirim Barang)</button>
                         `;
                     }
                 }

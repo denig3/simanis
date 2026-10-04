@@ -368,7 +368,7 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                                                 <td><?= $escape((string)$so['warehouse_name']) ?></td>
                                                 <td><?= $escape((string)$so['items_summary']) ?></td>
                                                 <td><span class="badge badge-blue">Approved</span></td>
-                                                <td><button class="btn btn-primary btn-sm" onclick="SimulasiModule.processGoodsIssue('<?= (int)$so['id'] ?>')">📦 Proses Goods Issue</button></td>
+                                                <td><button class="btn btn-primary btn-sm" data-action="process-gi" data-so-id="<?= (int)$so['id'] ?>" onclick="SimulasiModule.processGoodsIssue('<?= (int)$so['id'] ?>')">📦 Proses Goods Issue</button></td>
                                             </tr>
                                         <?php endforeach; ?>
                                     <?php else: ?>
@@ -399,7 +399,7 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                                                 <td><strong><?= $escape((string)$cp['name']) ?></strong></td>
                                                 <td><strong class="text-danger"><?= (int)$cp['total_stock'] ?> unit</strong></td>
                                                 <td><?= (int)$cp['min_stock_threshold'] ?> unit</td>
-                                                <td><button class="btn btn-secondary btn-sm" onclick="document.querySelector('#nav-po').click()">📋 Usulkan PO</button></td>
+                                                <td><button class="btn btn-secondary btn-sm" data-action="nav-po" onclick="document.querySelector('#nav-po').click()">📋 Usulkan PO</button></td>
                                             </tr>
                                         <?php endforeach; ?>
                                     <?php else: ?>
@@ -848,7 +848,7 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                                                 <td><?= $escape((string)($prod['category_name'] ?? 'Elektronik')) ?></td>
                                                 <td><strong>Rp <?= number_format((float)$prod['selling_price'], 0, ',', '.') ?></strong></td>
                                                 <td><span class="badge <?= $bClass ?>"><?= $escape($stockLabel) ?></span></td>
-                                                <td><button class="btn-sm btn-primary" onclick="document.querySelector('.nav-item[data-tab=\'tab-sales-orders\']').click(); SimulasiModule.createSalesOrder();">➕ Buat SO</button></td>
+                                                <td><button class="btn-sm btn-primary" data-action="nav-create-so" onclick="document.querySelector('.nav-item[data-tab=\'tab-sales-orders\']').click(); SimulasiModule.createSalesOrder();">➕ Buat SO</button></td>
                                             </tr>
                                         <?php endforeach; ?>
                                     <?php else: ?>
@@ -908,7 +908,7 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                                                 <td><strong class="<?= $isLow ? 'text-danger' : 'text-dark' ?>"><?= $tStock ?> unit</strong></td>
                                                 <td>
                                                     <?php if ($isLow): ?>
-                                                        <button class="btn-sm btn-secondary" onclick="document.querySelector('#nav-po').click(); SimulasiModule.createPurchaseOrder();">📋 Usulkan PO</button>
+                                                        <button class="btn-sm btn-secondary" data-action="nav-create-po" onclick="document.querySelector('#nav-po').click(); SimulasiModule.createPurchaseOrder();">📋 Usulkan PO</button>
                                                     <?php else: ?>
                                                         <span class="badge badge-success">Stok Cukup</span>
                                                     <?php endif; ?>
@@ -998,7 +998,7 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                     </div>
                     <div style="display:flex;gap:0.5rem;align-items:center;">
                         <a href="/export/csv?type=po" download="daftar_purchase_orders.csv" class="btn btn-secondary" id="btn-export-po">📥 Ekspor PO (CSV)</a>
-                        <button type="button" class="btn btn-primary" id="btn-create-po" onclick="SimulasiModule.createPurchaseOrder()">
+                        <button type="button" class="btn btn-primary" id="btn-create-po" data-action="create-po" onclick="SimulasiModule.createPurchaseOrder()">
                             🚛 Buat Purchase Order (PO) Baru
                         </button>
                     </div>
