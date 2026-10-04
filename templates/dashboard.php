@@ -1257,8 +1257,9 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                             <label for="edit-user-status" style="display:block; font-weight:600; margin-bottom: 4px;">Status Akun</label>
                             <select id="edit-user-status" name="status" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #fff;">
                                 <option value="active">Aktif (Dapat Login &amp; Transaksi)</option>
-                            <option value="inactive">Nonaktif (Diblokir)</option>
-                        </select>
+                                <option value="inactive">Nonaktif (Diblokir)</option>
+                            </select>
+                        </div>
                     </div>
 
                     <!-- Inline Konfirmasi Hapus Pengguna (Bebas Dialog Native / Anti-Block) -->
