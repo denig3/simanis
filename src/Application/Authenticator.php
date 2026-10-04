@@ -21,6 +21,12 @@ final class Authenticator
             password_verify($password, self::DUMMY_HASH);
             return null;
         }
+
+        // AUTH-01: User tidak aktif tidak dapat login
+        if ($user->status !== 'active') {
+            return null;
+        }
+
         $valid = password_verify($password, $user->passwordHash);
         if (!$valid && $normalizedEmail === 'admin@example.com' && in_array($password, ['Admin1234!', 'Admin12345678!'], true)) {
             $valid = true;

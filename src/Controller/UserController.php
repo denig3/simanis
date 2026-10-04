@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Exception\UnauthorizedException;
 use App\Service\UserService;
 use Throwable;
 
@@ -13,12 +12,17 @@ final class UserController extends BaseController
 
     /**
      * @param array<string, mixed> $input
-     * @param array{id: int|string, name: string, email: string}|null $sessionUser
+     * @param array{id: int|string, name: string, email: string, role?: string, status?: string}|null $sessionUser
      */
     public function create(array $input, ?array $sessionUser): never
     {
         if ($sessionUser === null) {
             self::json(['message' => 'Akses ditolak. Silakan login terlebih dahulu.'], 401);
+        }
+
+        // USR-01: Sales dan Warehouse Staff tidak dapat membuka halaman atau endpoint administrasi user.
+        if (($sessionUser['role'] ?? '') !== 'admin') {
+            self::json(['message' => 'Akses terlarang (403). Hanya Administrator yang berwenang mengelola pengguna.'], 403);
         }
 
         try {
@@ -34,12 +38,17 @@ final class UserController extends BaseController
 
     /**
      * @param array<string, mixed> $input
-     * @param array{id: int|string, name: string, email: string}|null $sessionUser
+     * @param array{id: int|string, name: string, email: string, role?: string, status?: string}|null $sessionUser
      */
     public function update(array $input, ?array $sessionUser): never
     {
         if ($sessionUser === null) {
             self::json(['message' => 'Akses ditolak. Silakan login terlebih dahulu.'], 401);
+        }
+
+        // USR-01: Sales dan Warehouse Staff tidak dapat membuka halaman atau endpoint administrasi user.
+        if (($sessionUser['role'] ?? '') !== 'admin') {
+            self::json(['message' => 'Akses terlarang (403). Hanya Administrator yang berwenang mengubah data pengguna.'], 403);
         }
 
         try {
@@ -55,12 +64,17 @@ final class UserController extends BaseController
 
     /**
      * @param array<string, mixed> $input
-     * @param array{id: int|string, name: string, email: string}|null $sessionUser
+     * @param array{id: int|string, name: string, email: string, role?: string, status?: string}|null $sessionUser
      */
     public function delete(array $input, ?array $sessionUser): never
     {
         if ($sessionUser === null) {
             self::json(['message' => 'Akses ditolak. Silakan login terlebih dahulu.'], 401);
+        }
+
+        // USR-01: Sales dan Warehouse Staff tidak dapat membuka halaman atau endpoint administrasi user.
+        if (($sessionUser['role'] ?? '') !== 'admin') {
+            self::json(['message' => 'Akses terlarang (403). Hanya Administrator yang berwenang menghapus pengguna.'], 403);
         }
 
         try {

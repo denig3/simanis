@@ -10,5 +10,7 @@ final readonly class User
         public string $name,
         public string $email,
         public string $passwordHash,
+        public string $role = 'sales',
+        public string $status = 'active',
     ) {}
 }

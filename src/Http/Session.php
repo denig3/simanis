@@ -33,10 +33,10 @@ final class Session
         return $token !== '' && hash_equals(self::token(), $token);
     }
 
-    /** @return array{id: int, name: string, email: string}|null */
+    /** @return array{id: int, name: string, email: string, role?: string, status?: string}|null */
     public static function user(): ?array
     {
-        /** @var array{id: int, name: string, email: string}|null $user */
+        /** @var array{id: int, name: string, email: string, role?: string, status?: string}|null $user */
         $user = $_SESSION['user'] ?? null;
         return $user;
     }
@@ -44,7 +44,16 @@ final class Session
     public static function login(User $user): void
     {
         session_regenerate_id(true);
-        $_SESSION = ['user' => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email], 'last_activity' => time()];
+        $_SESSION = [
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'status' => $user->status,
+            ],
+            'last_activity' => time(),
+        ];
     }
 
     public static function logout(): void

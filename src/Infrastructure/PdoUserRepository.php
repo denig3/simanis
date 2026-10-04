@@ -26,10 +26,17 @@ final class PdoUserRepository implements UserRepository
 
     public function findByEmail(string $email): ?User
     {
-        $query = $this->pdo->prepare('SELECT id, name, email, password_hash FROM users WHERE email = :email LIMIT 1');
+        $query = $this->pdo->prepare('SELECT id, name, email, password_hash, role, status FROM users WHERE email = :email LIMIT 1');
         $query->execute(['email' => $email]);
-        /** @var array{id: int|string, name: string, email: string, password_hash: string}|false $row */
+        /** @var array{id: int|string, name: string, email: string, password_hash: string, role?: string, status?: string}|false $row */
         $row = $query->fetch();
-        return $row === false ? null : new User((int) $row['id'], $row['name'], $row['email'], $row['password_hash']);
+        return $row === false ? null : new User(
+            (int) $row['id'],
+            $row['name'],
+            $row['email'],
+            $row['password_hash'],
+            (string) ($row['role'] ?? 'sales'),
+            (string) ($row['status'] ?? 'active')
+        );
     }
 }
