@@ -14,6 +14,9 @@ interface OrderRepositoryInterface
 
     public function findSalesOrderById(int $id): ?SalesOrder;
 
+    /** @return list<array{id: int, sales_order_id: int, product_id: int, sku: string, product_name: string, quantity: int, unit_price: float, subtotal: float}> */
+    public function findSalesOrderItems(int $salesOrderId): array;
+
     /**
      * @param list<array{product_id: int, quantity: int, unit_price: float}> $items
      */

@@ -32,6 +32,17 @@ final class OrderService
         return $so;
     }
 
+    /** @return array{order: array<string, mixed>, items: list<array{id: int, sales_order_id: int, product_id: int, sku: string, product_name: string, quantity: int, unit_price: float, subtotal: float}>} */
+    public function getSalesOrderDetails(int $id): array
+    {
+        $so = $this->getSalesOrder($id);
+        $items = $this->orderRepository->findSalesOrderItems($id);
+        return [
+            'order' => $so->toArray(),
+            'items' => $items,
+        ];
+    }
+
     /**
      * @param array{id: int|string, role?: string, email?: string} $user
      * @param array<string, mixed> $input
@@ -87,13 +98,19 @@ final class OrderService
             ];
         }
 
-        return $this->orderRepository->createSalesOrder(
+        $orderId = $this->orderRepository->createSalesOrder(
             $customerId,
             $warehouseId,
             (int) $user['id'],
             $notes,
             $validatedItems
         );
+
+        if (!empty($input['submit_immediately'])) {
+            $this->orderRepository->updateSalesOrderStatus($orderId, 'pending_approval');
+        }
+
+        return $orderId;
     }
 
     /**

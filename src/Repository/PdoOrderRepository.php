@@ -113,6 +113,36 @@ final class PdoOrderRepository implements OrderRepositoryInterface
         );
     }
 
+    /** @return list<array{id: int, sales_order_id: int, product_id: int, sku: string, product_name: string, quantity: int, unit_price: float, subtotal: float}> */
+    public function findSalesOrderItems(int $salesOrderId): array
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT soi.id, soi.sales_order_id, soi.product_id, p.sku, p.name AS product_name, soi.quantity, soi.unit_price, soi.subtotal
+            FROM sales_order_items soi
+            JOIN products p ON soi.product_id = p.id
+            WHERE soi.sales_order_id = ?
+            ORDER BY soi.id ASC
+        ");
+        $stmt->execute([$salesOrderId]);
+        /** @var list<array{id: int|string, sales_order_id: int|string, product_id: int|string, sku: string, product_name: string, quantity: int|string, unit_price: float|string, subtotal: float|string}> $raw */
+        $raw = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $result = [];
+        foreach ($raw as $item) {
+            $result[] = [
+                'id' => (int) $item['id'],
+                'sales_order_id' => (int) $item['sales_order_id'],
+                'product_id' => (int) $item['product_id'],
+                'sku' => (string) $item['sku'],
+                'product_name' => (string) $item['product_name'],
+                'quantity' => (int) $item['quantity'],
+                'unit_price' => (float) $item['unit_price'],
+                'subtotal' => (float) $item['subtotal'],
+            ];
+        }
+        return $result;
+    }
+
     /**
      * @param list<array{product_id: int, quantity: int, unit_price: float}> $items
      */

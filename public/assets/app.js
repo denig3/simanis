@@ -122,6 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initEditUserModal();
     initMasterDataModals();
     initEditMasterModals();
+    initSalesOrderModals();
     initExportButtons();
 });
 
@@ -1410,6 +1411,230 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
+// Inisialisasi Modal Buat Sales Order Baru & Detail Sales Order
+function initSalesOrderModals() {
+    const modalAdd = document.querySelector('#modal-add-so');
+    const btnOpenAdd = document.querySelector('#btn-create-so');
+    const btnCloseAdd = document.querySelector('#btn-close-add-so');
+    const btnCancelAdd = document.querySelector('#btn-cancel-add-so');
+    const formAdd = document.querySelector('#form-add-so');
+    const errorAdd = document.querySelector('#add-so-error');
+    const btnAddRow = document.querySelector('#btn-add-so-item-row');
+    const tbodyItems = document.querySelector('#so-items-tbody');
+    const grandTotalText = document.querySelector('#so-grand-total-text');
+    const btnSaveDraft = document.querySelector('#btn-save-draft-so');
+
+    const modalDetail = document.querySelector('#modal-detail-so');
+    const btnCloseDetail = document.querySelector('#btn-close-detail-so');
+    const btnCloseDetailAction = document.querySelector('#btn-close-detail-so-action');
+
+    let catalogProducts = [];
+    try {
+        const catalogEl = document.querySelector('#products-catalog-data');
+        if (catalogEl && catalogEl.textContent) {
+            catalogProducts = JSON.parse(catalogEl.textContent);
+        }
+    } catch (e) {
+        console.error('Gagal membaca data katalog produk:', e);
+    }
+
+    const updateGrandTotal = () => {
+        let total = 0;
+        tbodyItems?.querySelectorAll('tr').forEach(tr => {
+            const subtotal = parseFloat(tr.dataset.subtotal || '0');
+            total += subtotal;
+        });
+        if (grandTotalText) {
+            grandTotalText.textContent = 'Rp ' + total.toLocaleString('id-ID');
+        }
+    };
+
+    const addItemRow = (productId = '', qty = 1) => {
+        if (!tbodyItems) return;
+        const tr = document.createElement('tr');
+        tr.dataset.subtotal = '0';
+
+        let optionsHtml = '<option value="">-- Pilih Produk --</option>';
+        catalogProducts.forEach(p => {
+            const selected = String(p.id) === String(productId) ? 'selected' : '';
+            optionsHtml += `<option value="${p.id}" data-price="${p.price}" data-stock="${p.stock}" ${selected}>${escapeHtml(p.name)} (${escapeHtml(p.sku)}) [Stok: ${p.stock}]</option>`;
+        });
+
+        tr.innerHTML = `
+            <td>
+                <select class="input so-item-product" style="width:100%; padding: 6px 10px; font-size:13px; border-radius: var(--radius-sm);" required>
+                    ${optionsHtml}
+                </select>
+            </td>
+            <td>
+                <input type="number" class="input so-item-qty" min="1" value="${qty}" style="width:100%; padding: 6px 8px; font-size:13px; border-radius: var(--radius-sm); text-align:right;" required>
+            </td>
+            <td>
+                <input type="number" class="input so-item-price" min="0" step="500" value="0" style="width:100%; padding: 6px 8px; font-size:13px; border-radius: var(--radius-sm); text-align:right;" required>
+            </td>
+            <td style="text-align:right; font-weight:600; font-size:13px;" class="so-item-subtotal-cell">
+                Rp 0
+            </td>
+            <td style="text-align:center;">
+                <button type="button" class="btn-sm btn-danger btn-remove-row" style="padding: 2px 8px; font-size: 13px;" title="Hapus Baris">&times;</button>
+            </td>
+        `;
+
+        const prodSelect = tr.querySelector('.so-item-product');
+        const qtyInput = tr.querySelector('.so-item-qty');
+        const priceInput = tr.querySelector('.so-item-price');
+        const subtotalCell = tr.querySelector('.so-item-subtotal-cell');
+        const btnRemove = tr.querySelector('.btn-remove-row');
+
+        const calcRow = () => {
+            const q = Math.max(1, parseInt(qtyInput.value || '1', 10));
+            const p = Math.max(0, parseFloat(priceInput.value || '0'));
+            const sub = q * p;
+            tr.dataset.subtotal = String(sub);
+            if (subtotalCell) subtotalCell.textContent = 'Rp ' + sub.toLocaleString('id-ID');
+            updateGrandTotal();
+        };
+
+        prodSelect.addEventListener('change', () => {
+            const selectedOpt = prodSelect.options[prodSelect.selectedIndex];
+            const defPrice = parseFloat(selectedOpt?.dataset.price || '0');
+            priceInput.value = defPrice;
+            calcRow();
+        });
+
+        qtyInput.addEventListener('input', calcRow);
+        priceInput.addEventListener('input', calcRow);
+
+        btnRemove.addEventListener('click', () => {
+            if (tbodyItems.querySelectorAll('tr').length <= 1) {
+                showToast('⚠️ Pesanan wajib memiliki minimal 1 item produk.');
+                return;
+            }
+            tr.remove();
+            updateGrandTotal();
+        });
+
+        tbodyItems.appendChild(tr);
+        if (productId) {
+            prodSelect.dispatchEvent(new Event('change'));
+        }
+    };
+
+    btnAddRow?.addEventListener('click', () => addItemRow());
+
+    btnOpenAdd?.addEventListener('click', () => {
+        if (AppState.currentRole === 'warehouse') {
+            showToast('❌ Akses Ditolak: Staff Gudang tidak memiliki hak membuat Sales Order.');
+            return;
+        }
+        formAdd?.reset();
+        if (errorAdd) errorAdd.hidden = true;
+        if (tbodyItems) tbodyItems.innerHTML = '';
+        addItemRow();
+        if (modalAdd) modalAdd.hidden = false;
+        document.body.style.overflow = 'hidden';
+    });
+
+    const closeAddModal = () => {
+        if (modalAdd) modalAdd.hidden = true;
+        document.body.style.overflow = '';
+    };
+
+    btnCloseAdd?.addEventListener('click', closeAddModal);
+    btnCancelAdd?.addEventListener('click', closeAddModal);
+
+    modalAdd?.addEventListener('click', (e) => {
+        if (e.target === modalAdd) closeAddModal();
+    });
+
+    let isSubmittingImmediately = true;
+    btnSaveDraft?.addEventListener('click', () => {
+        isSubmittingImmediately = false;
+        formAdd?.requestSubmit();
+    });
+
+    formAdd?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (errorAdd) errorAdd.hidden = true;
+
+        const custId = parseInt(document.querySelector('#new-so-customer')?.value || '0', 10);
+        const whId = parseInt(document.querySelector('#new-so-warehouse')?.value || '0', 10);
+        const notes = document.querySelector('#new-so-notes')?.value || '';
+
+        if (!custId) {
+            if (errorAdd) { errorAdd.textContent = 'Pilih Customer terlebih dahulu.'; errorAdd.hidden = false; }
+            return;
+        }
+        if (!whId) {
+            if (errorAdd) { errorAdd.textContent = 'Pilih Gudang Pengiriman terlebih dahulu.'; errorAdd.hidden = false; }
+            return;
+        }
+
+        const items = [];
+        let itemError = null;
+        tbodyItems?.querySelectorAll('tr').forEach(tr => {
+            const prodId = parseInt(tr.querySelector('.so-item-product')?.value || '0', 10);
+            const qty = parseInt(tr.querySelector('.so-item-qty')?.value || '0', 10);
+            const unitPrice = parseFloat(tr.querySelector('.so-item-price')?.value || '0');
+
+            if (!prodId) {
+                itemError = 'Pilih produk pada setiap baris item.';
+            } else if (qty <= 0) {
+                itemError = 'Kuantitas produk harus lebih dari 0.';
+            }
+            items.push({ product_id: prodId, quantity: qty, unit_price: unitPrice });
+        });
+
+        if (itemError) {
+            if (errorAdd) { errorAdd.textContent = itemError; errorAdd.hidden = false; }
+            return;
+        }
+        if (items.length === 0) {
+            if (errorAdd) { errorAdd.textContent = 'Tambahkan minimal 1 item produk.'; errorAdd.hidden = false; }
+            return;
+        }
+
+        const submitBtn = isSubmittingImmediately ? document.querySelector('#btn-submit-approval-so') : btnSaveDraft;
+        const originalText = submitBtn ? submitBtn.textContent : '';
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Menyimpan...'; }
+
+        try {
+            const res = await request('/api/orders/sales/create', {
+                customer_id: custId,
+                warehouse_id: whId,
+                notes: notes,
+                items: items,
+                submit_immediately: isSubmittingImmediately
+            });
+
+            closeAddModal();
+            showToast(isSubmittingImmediately 
+                ? `✅ Sales Order #${res.order_id} berhasil dibuat dan diajukan ke Admin!` 
+                : `✅ Sales Order #${res.order_id} berhasil disimpan sebagai Draft!`
+            );
+            setTimeout(() => window.location.reload(), 600);
+        } catch (err) {
+            if (errorAdd) {
+                errorAdd.textContent = err.message;
+                errorAdd.hidden = false;
+            }
+        } finally {
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = originalText; }
+            isSubmittingImmediately = true;
+        }
+    });
+
+    const closeDetailModal = () => {
+        if (modalDetail) modalDetail.hidden = true;
+        document.body.style.overflow = '';
+    };
+    btnCloseDetail?.addEventListener('click', closeDetailModal);
+    btnCloseDetailAction?.addEventListener('click', closeDetailModal);
+    modalDetail?.addEventListener('click', (e) => {
+        if (e.target === modalDetail) closeDetailModal();
+    });
+}
+
 // Inisialisasi Buka/Tutup (Toggle Collapse) Sidebar Menu Dinamis
 function initSidebarToggle() {
     const toggleBtn = document.querySelector('#sidebar-toggle-btn');
@@ -1604,32 +1829,48 @@ function renderSalesOrderActions() {
         const act = tr.querySelector('.action-cell') || tr.querySelector(`#so-action-${id}`);
         if (!act) return;
 
-        if (status === 'pending_approval') {
+        let buttons = `<button type="button" class="btn-sm btn-secondary" onclick="SimulasiModule.viewSODetail('${id}')" title="Lihat Rincian Pesanan">👁️ Detail</button> `;
+
+        if (status === 'draft') {
+            if (role === 'admin' || role === 'sales') {
+                buttons += `
+                    <button type="button" class="btn-sm btn-primary" onclick="SimulasiModule.submitSO('${id}')" title="Ajukan ke Admin untuk ditinjau">🚀 Ajukan</button>
+                    <button type="button" class="btn-sm btn-danger" onclick="SimulasiModule.cancelSO('${id}')" title="Batalkan order draft">❌ Batal</button>
+                `;
+            } else {
+                buttons += `<span class="text-muted"><small>Draft Order</small></span>`;
+            }
+        } else if (status === 'pending_approval') {
             if (role === 'admin') {
-                act.innerHTML = `
-                    <button class="btn-sm btn-success" onclick="SimulasiModule.approveSO('${id}')">✅ Setujui (Approve)</button>
-                    <button class="btn-sm btn-danger" onclick="SimulasiModule.rejectSO('${id}')">❌ Tolak</button>
+                buttons += `
+                    <button type="button" class="btn-sm btn-success" onclick="SimulasiModule.approveSO('${id}')" title="Setujui Sales Order">✅ Setujui</button>
+                    <button type="button" class="btn-sm btn-danger" onclick="SimulasiModule.rejectSO('${id}')" title="Tolak Sales Order">❌ Tolak</button>
                 `;
             } else if (role === 'sales') {
-                act.innerHTML = `<span class="text-amber"><small>🔒 Menunggu Persetujuan Admin (Sales tidak bisa menyetujui order sendiri)</small></span>`;
+                buttons += `
+                    <span class="text-amber"><small>🔒 Menunggu Admin</small></span>
+                    <button type="button" class="btn-sm btn-danger" onclick="SimulasiModule.cancelSO('${id}')" title="Batalkan pengajuan">❌ Batal</button>
+                `;
             } else if (role === 'warehouse') {
-                act.innerHTML = `<span class="text-muted"><small>🔒 Menunggu Approval Admin sebelum Goods Issue</small></span>`;
+                buttons += `<span class="text-muted"><small>🔒 Menunggu Approval Admin</small></span>`;
             }
         } else if (status === 'approved') {
             if (role === 'warehouse' || role === 'admin') {
-                act.innerHTML = `
-                    <button class="btn-sm btn-primary" onclick="SimulasiModule.processGoodsIssue('${id}')">📦 Proses Goods Issue (Keluar Stok)</button>
+                buttons += `
+                    <button type="button" class="btn-sm btn-primary" onclick="SimulasiModule.processGoodsIssue('${id}')" title="Keluarkan barang fisik & potong stok">📦 Goods Issue</button>
                 `;
             } else {
-                act.innerHTML = `<span class="text-blue"><small>Disetujui. Menunggu Staff Gudang kirim barang.</small></span>`;
+                buttons += `<span class="text-blue"><small>Disetujui. Siap kirim.</small></span>`;
             }
         } else if (status === 'fulfilled') {
-            act.innerHTML = `<span class="text-muted"><small>Selesai (Goods Issue Done)</small></span>`;
-        } else if (status === 'rejected') {
-            act.innerHTML = `<span class="text-danger"><small>Ditolak Admin</small></span>`;
+            buttons += `<span class="text-success"><small>✅ Terpenuhi</small></span>`;
+        } else if (status === 'cancelled' || status === 'rejected') {
+            buttons += `<span class="text-danger"><small>❌ Batal/Ditolak</small></span>`;
         } else {
-            act.innerHTML = `<span class="text-muted"><small>Draft Order</small></span>`;
+            buttons += `<span class="text-muted"><small>${escapeHtml(status)}</small></span>`;
         }
+
+        act.innerHTML = buttons;
     });
 }
 
@@ -1659,158 +1900,245 @@ function renderPurchaseOrderActions() {
 // Modul Operasi Simulasi Interaktif
 window.SimulasiModule = {
     // 1. Sales Order Workflow
-    createSalesOrder: () => {
-        if (AppState.currentRole === 'warehouse') {
-            showToast('❌ Akses Ditolak: Staff Gudang tidak memiliki hak membuat Sales Order.');
-            return;
-        }
-        const newSoId = Math.floor(100 + Math.random() * 900);
-        const tbody = document.querySelector('#so-table-body');
-        const newRow = document.createElement('tr');
-        newRow.id = `so-row-${newSoId}`;
-        newRow.setAttribute('data-so-id', String(newSoId));
-        newRow.setAttribute('data-so-status', 'pending_approval');
-        newRow.innerHTML = `
-            <td><strong>#SO-2026-${newSoId}</strong></td>
-            <td>PT Mitra Sejahtera Baru</td>
-            <td>Gudang Utama Jakarta</td>
-            <td>Keyboard Mekanikal (5 unit)</td>
-            <td>${AppState.rolesInfo[AppState.currentRole].title}</td>
-            <td><span class="badge badge-warning" id="so-status-${newSoId}">PendingApproval</span></td>
-            <td class="action-cell" id="so-action-${newSoId}"></td>
-        `;
-        tbody?.prepend(newRow);
-        renderSalesOrderActions();
+    viewSODetail: async (id) => {
+        const modal = document.querySelector('#modal-detail-so');
+        const loading = document.querySelector('#detail-so-loading');
+        const content = document.querySelector('#detail-so-content');
+        if (!modal) return;
 
-        // Update badge count
-        const badge = document.querySelector('#pending-so-count');
-        if (badge) badge.textContent = String(parseInt(badge.textContent || '0', 10) + 1);
-        showToast(`✅ Sales Order #SO-2026-${newSoId} berhasil dibuat dan diajukan (PendingApproval)!`);
+        modal.hidden = false;
+        document.body.style.overflow = 'hidden';
+        if (loading) loading.hidden = false;
+        if (content) content.hidden = true;
+
+        try {
+            const res = await request('/api/orders/sales/detail', { order_id: parseInt(id, 10) });
+            const so = res.data.order;
+            const items = res.data.items || [];
+
+            document.querySelector('#detail-so-title').textContent = `📦 Detail Sales Order #${so.so_number || id}`;
+            const badge = document.querySelector('#detail-so-badge');
+            if (badge) {
+                badge.textContent = so.status;
+                const badgeMap = {
+                    'draft': 'badge-secondary',
+                    'pending_approval': 'badge-warning',
+                    'approved': 'badge-blue',
+                    'rejected': 'badge-danger',
+                    'fulfilled': 'badge-success',
+                    'cancelled': 'badge-secondary'
+                };
+                badge.className = 'badge ' + (badgeMap[so.status] || 'badge-secondary');
+            }
+
+            document.querySelector('#detail-so-number').textContent = '#' + (so.so_number || id);
+            document.querySelector('#detail-so-customer').textContent = so.customer_name || '-';
+            document.querySelector('#detail-so-warehouse').textContent = so.warehouse_name || '-';
+            document.querySelector('#detail-so-creator').textContent = so.creator_name || '-';
+            document.querySelector('#detail-so-approver').textContent = so.approver_name || '- (Belum ada approval)';
+            document.querySelector('#detail-so-date').textContent = so.created_at || '-';
+
+            const notesBox = document.querySelector('#detail-so-notes-container');
+            const notesText = document.querySelector('#detail-so-notes');
+            if (so.notes && so.notes.trim()) {
+                if (notesBox) notesBox.hidden = false;
+                if (notesText) notesText.textContent = so.notes;
+            } else {
+                if (notesBox) notesBox.hidden = true;
+            }
+
+            const itemsTbody = document.querySelector('#detail-so-items-body');
+            if (itemsTbody) {
+                itemsTbody.innerHTML = '';
+                let total = 0;
+                items.forEach(it => {
+                    const row = document.createElement('tr');
+                    const qty = parseInt(it.quantity, 10);
+                    const price = parseFloat(it.unit_price);
+                    const subtotal = parseFloat(it.subtotal || (qty * price));
+                    total += subtotal;
+                    row.innerHTML = `
+                        <td><strong>${escapeHtml(it.sku || '-')}</strong></td>
+                        <td>${escapeHtml(it.product_name || '-')}</td>
+                        <td style="text-align: right;">${qty.toLocaleString('id-ID')} unit</td>
+                        <td style="text-align: right;">Rp ${price.toLocaleString('id-ID')}</td>
+                        <td style="text-align: right; font-weight: 600;">Rp ${subtotal.toLocaleString('id-ID')}</td>
+                    `;
+                    itemsTbody.appendChild(row);
+                });
+                document.querySelector('#detail-so-total').textContent = 'Rp ' + total.toLocaleString('id-ID');
+            }
+
+            // Render Contextual Actions in Detail Modal
+            const actContainer = document.querySelector('#detail-so-contextual-actions');
+            if (actContainer) {
+                actContainer.innerHTML = '';
+                const role = AppState.currentRole;
+                if (so.status === 'draft') {
+                    actContainer.innerHTML = `
+                        <button type="button" class="modal-btn modal-btn-primary" onclick="SimulasiModule.submitSO('${id}')">🚀 Ajukan Persetujuan</button>
+                        <button type="button" class="modal-btn modal-btn-danger" onclick="SimulasiModule.cancelSO('${id}')">❌ Batalkan Order</button>
+                    `;
+                } else if (so.status === 'pending_approval') {
+                    if (role === 'admin') {
+                        actContainer.innerHTML = `
+                            <button type="button" class="modal-btn modal-btn-primary" onclick="SimulasiModule.approveSO('${id}')">✅ Setujui (Approve)</button>
+                            <button type="button" class="modal-btn modal-btn-danger" onclick="SimulasiModule.rejectSO('${id}')">❌ Tolak Order</button>
+                        `;
+                    } else if (role === 'sales') {
+                        actContainer.innerHTML = `
+                            <span class="text-amber" style="font-size:12px; margin-right:8px; align-self:center;">🔒 Menunggu Persetujuan Admin</span>
+                            <button type="button" class="modal-btn modal-btn-danger" onclick="SimulasiModule.cancelSO('${id}')">❌ Batalkan Order</button>
+                        `;
+                    }
+                } else if (so.status === 'approved') {
+                    if (role === 'warehouse' || role === 'admin') {
+                        actContainer.innerHTML = `
+                            <button type="button" class="modal-btn modal-btn-primary" onclick="SimulasiModule.processGoodsIssue('${id}')">📦 Proses Goods Issue (Kirim Barang)</button>
+                        `;
+                    }
+                }
+            }
+
+            if (loading) loading.hidden = true;
+            if (content) content.hidden = false;
+        } catch (err) {
+            showToast('❌ Gagal memuat detail SO: ' + err.message);
+            if (loading) loading.textContent = 'Gagal memuat: ' + err.message;
+        }
     },
 
-    approveSO: (id) => {
+    submitSO: async (id) => {
+        try {
+            await request('/api/orders/sales/submit', { order_id: parseInt(id, 10) });
+            showToast(`🚀 Sales Order #${id} berhasil diajukan untuk ditinjau Admin!`);
+            setTimeout(() => window.location.reload(), 600);
+        } catch (err) {
+            showToast('❌ ' + err.message);
+        }
+    },
+
+    cancelSO: async (id) => {
+        if (!confirm(`Yakin ingin membatalkan Sales Order #${id}?`)) return;
+        try {
+            await request('/api/orders/sales/cancel', { order_id: parseInt(id, 10) });
+            showToast(`❌ Sales Order #${id} berhasil dibatalkan.`);
+            setTimeout(() => window.location.reload(), 600);
+        } catch (err) {
+            showToast('❌ ' + err.message);
+        }
+    },
+
+    createSalesOrder: async () => {
+        document.querySelector('#btn-create-so')?.click();
+    },
+
+    approveSO: async (id) => {
         if (AppState.currentRole !== 'admin') {
             showToast('❌ Akses Ditolak: Hanya Admin yang berhak menyetujui Sales Order (Prinsip SOD).');
             return;
         }
-        const row = document.querySelector(`#so-row-${id}`);
-        if (row) row.setAttribute('data-so-status', 'approved');
-        const statusBadge = document.querySelector(`#so-status-${id}`);
-        if (statusBadge) {
-            statusBadge.className = 'badge badge-blue';
-            statusBadge.textContent = 'Approved';
+        try {
+            await request('/api/orders/sales/approve', { order_id: parseInt(id, 10) });
+            showToast(`✅ Sales Order #${id} DISETUJUI oleh Admin. Siap diproses Goods Issue oleh Staff Gudang.`);
+            setTimeout(() => window.location.reload(), 600);
+        } catch (err) {
+            showToast('❌ ' + err.message);
         }
-        renderSalesOrderActions();
-        showToast(`✅ Sales Order #SO-2026-${id} DISETUJUI oleh Admin. Siap diproses Goods Issue oleh Staff Gudang.`);
     },
 
-    rejectSO: (id) => {
+    rejectSO: async (id) => {
         if (AppState.currentRole !== 'admin') {
             showToast('❌ Akses Ditolak: Hanya Admin yang berhak menolak Sales Order.');
             return;
         }
-        const row = document.querySelector(`#so-row-${id}`);
-        if (row) row.setAttribute('data-so-status', 'rejected');
-        const statusBadge = document.querySelector(`#so-status-${id}`);
-        if (statusBadge) {
-            statusBadge.className = 'badge badge-danger';
-            statusBadge.textContent = 'Rejected';
+        const reason = prompt('Masukkan alasan penolakan Sales Order:', 'Spesifikasi tidak sesuai / kuota tidak mencukupi');
+        if (reason === null) return;
+        try {
+            await request('/api/orders/sales/reject', { order_id: parseInt(id, 10), reason: reason });
+            showToast(`❌ Sales Order #${id} DITOLAK.`);
+            setTimeout(() => window.location.reload(), 600);
+        } catch (err) {
+            showToast('❌ ' + err.message);
         }
-        renderSalesOrderActions();
-        showToast(`❌ Sales Order #SO-2026-${id} DITOLAK.`);
     },
 
-    processGoodsIssue: (id) => {
+    processGoodsIssue: async (id) => {
         if (AppState.currentRole !== 'warehouse' && AppState.currentRole !== 'admin') {
             showToast('⚠️ Hanya Staff Gudang yang dapat memproses Goods Issue.');
             return;
         }
-        const row = document.querySelector(`#so-row-${id}`);
-        if (row) row.setAttribute('data-so-status', 'fulfilled');
-        const statusBadge = document.querySelector(`#so-status-${id}`);
-        if (statusBadge) {
-            statusBadge.className = 'badge badge-success';
-            statusBadge.textContent = 'Fulfilled';
+        try {
+            await request('/api/orders/sales/fulfill', { order_id: parseInt(id, 10) });
+            showToast(`📦 Goods Issue #${id} sukses! Stok terpotong atomik dan tercatat di Stock Ledger.`);
+            setTimeout(() => window.location.reload(), 600);
+        } catch (err) {
+            showToast('❌ ' + err.message);
         }
-        renderSalesOrderActions();
-
-        // Catat ke Stock Ledger secara otomatis
-        const ledgerBody = document.querySelector('#stock-ledger-body');
-        const now = new Date().toISOString().replace('T', ' ').substring(0, 16);
-        const ledgerRow = document.createElement('tr');
-        ledgerRow.innerHTML = `
-            <td>${now}</td>
-            <td>Gudang Surabaya</td>
-            <td>Keyboard Mekanikal (PRD-003)</td>
-            <td><span class="badge badge-danger">- STOK KELUAR</span></td>
-            <td>-10 unit</td>
-            <td><strong>63 unit</strong></td>
-            <td><code>SO-2026-${id}</code></td>
-            <td>${AppState.rolesInfo[AppState.currentRole].title}</td>
-        `;
-        ledgerBody?.prepend(ledgerRow);
-        showToast(`📦 Goods Issue #SO-2026-${id} sukses! Stok terpotong dan tercatat di Stock Ledger.`);
     },
 
     // 2. Purchase Order & Goods Receipt Workflow
-    createPurchaseOrder: () => {
+    createPurchaseOrder: async () => {
         if (AppState.currentRole === 'sales') {
             showToast('❌ Akses Ditolak: Sales Staff tidak memiliki akses ke pengadaan / Purchase Order.');
             return;
         }
-        const newPoId = Math.floor(500 + Math.random() * 400);
-        const tbody = document.querySelector('#po-table-body');
-        const newRow = document.createElement('tr');
-        newRow.id = `po-row-${newPoId}`;
-        newRow.setAttribute('data-po-id', String(newPoId));
-        newRow.setAttribute('data-po-status', 'sent_to_supplier');
-        const isWh = AppState.currentRole === 'warehouse';
-        newRow.innerHTML = `
-            <td><strong>#PO-2026-${newPoId}</strong></td>
-            <td>PT Supplier Utama Indonesia</td>
-            <td>Gudang Utama Jakarta</td>
-            <td>Monitor 27 Inch (15 unit)</td>
-            <td>${AppState.rolesInfo[AppState.currentRole].title}</td>
-            <td><span class="badge badge-blue" id="po-status-${newPoId}">SentToSupplier</span></td>
-            <td id="po-action-${newPoId}"></td>
-        `;
-        tbody?.prepend(newRow);
-        renderPurchaseOrderActions();
-        showToast(isWh 
-            ? `📋 Usulan PO #PO-2026-${newPoId} berhasil diajukan oleh Staff Gudang!` 
-            : `🚛 Purchase Order #PO-2026-${newPoId} berhasil diterbitkan oleh Admin!`);
+        try {
+            const res = await request('/api/orders/purchase/create', {
+                supplier_id: 1,
+                warehouse_id: 1,
+                notes: 'Pengadaan pengisian stok',
+                items: [
+                    { product_id: 2, quantity: 15, unit_price: 3200000.0 }
+                ]
+            });
+            const newPoId = res.order_id || Math.floor(500 + Math.random() * 400);
+            await request('/api/orders/purchase/order', { order_id: newPoId });
+
+            const tbody = document.querySelector('#po-table-body');
+            const newRow = document.createElement('tr');
+            newRow.id = `po-row-${newPoId}`;
+            newRow.setAttribute('data-po-id', String(newPoId));
+            newRow.setAttribute('data-po-status', 'sent_to_supplier');
+            const isWh = AppState.currentRole === 'warehouse';
+            newRow.innerHTML = `
+                <td><strong>#PO-2026-${newPoId}</strong></td>
+                <td>PT Supplier Utama Indonesia</td>
+                <td>Gudang Utama Jakarta</td>
+                <td>Monitor 27 Inch (15 unit)</td>
+                <td>${AppState.rolesInfo[AppState.currentRole].title}</td>
+                <td><span class="badge badge-blue" id="po-status-${newPoId}">sent_to_supplier</span></td>
+                <td id="po-action-${newPoId}"></td>
+            `;
+            tbody?.prepend(newRow);
+            renderPurchaseOrderActions();
+            showToast(isWh 
+                ? `📋 Usulan PO #PO-2026-${newPoId} berhasil diajukan oleh Staff Gudang!` 
+                : `🚛 Purchase Order #PO-2026-${newPoId} berhasil diterbitkan di database!`);
+        } catch (err) {
+            showToast('❌ ' + err.message);
+        }
     },
 
-    processGoodsReceipt: (id) => {
+    processGoodsReceipt: async (id) => {
         if (AppState.currentRole !== 'warehouse' && AppState.currentRole !== 'admin') {
             showToast('⚠️ Hanya Staff Gudang yang dapat mencatat penerimaan barang (Goods Receipt).');
             return;
         }
-        const row = document.querySelector(`#po-row-${id}`);
-        if (row) row.setAttribute('data-po-status', 'goods_received');
-        const statusBadge = document.querySelector(`#po-status-${id}`);
-        if (statusBadge) {
-            statusBadge.className = 'badge badge-success';
-            statusBadge.textContent = 'GoodsReceived';
+        try {
+            await request('/api/orders/purchase/receive', { order_id: parseInt(id, 10) });
+            const row = document.querySelector(`#po-row-${id}`);
+            if (row) row.setAttribute('data-po-status', 'goods_received');
+            const statusBadge = document.querySelector(`#po-status-${id}`);
+            if (statusBadge) {
+                statusBadge.className = 'badge badge-success';
+                statusBadge.textContent = 'goods_received';
+            }
+            renderPurchaseOrderActions();
+            showToast(`📥 Goods Receipt #PO-2026-${id} berhasil! Stok fisik bertambah di database.`);
+        } catch (err) {
+            showToast('❌ ' + err.message);
         }
-        renderPurchaseOrderActions();
-
-        // Catat ke Stock Ledger secara otomatis
-        const ledgerBody = document.querySelector('#stock-ledger-body');
-        const now = new Date().toISOString().replace('T', ' ').substring(0, 16);
-        const ledgerRow = document.createElement('tr');
-        ledgerRow.innerHTML = `
-            <td>${now}</td>
-            <td>Gudang Utama Jakarta</td>
-            <td>Monitor 27 Inch (PRD-002)</td>
-            <td><span class="badge badge-success">+ STOK MASUK</span></td>
-            <td>+20 unit</td>
-            <td><strong>27 unit</strong></td>
-            <td><code>PO-2026-${id}</code></td>
-            <td>${AppState.rolesInfo[AppState.currentRole].title}</td>
-        `;
-        ledgerBody?.prepend(ledgerRow);
-        showToast(`📥 Goods Receipt #PO-2026-${id} berhasil! Stok bertambah di Stock Ledger.`);
     },
 
     // 3. Export CSV Functionality (Download File CSV Resmi Berbasis Database)
@@ -1834,14 +2162,7 @@ window.SimulasiModule = {
             const filename = fileMap[type] || 'data_ekspor.csv';
             showToast(`📥 Mengunduh file ${filename}...`);
 
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            setTimeout(() => {
-                if (link.parentNode) link.parentNode.removeChild(link);
-            }, 1000);
+            window.location.href = url;
         } catch (err) {
             console.error('Error saat ekspor CSV:', err);
             showToast('❌ Gagal mengekspor data: ' + err.message);

@@ -934,8 +934,8 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                     </div>
                     <div style="display:flex;gap:0.5rem;align-items:center;">
                         <a href="/export/csv?type=so" download="daftar_sales_orders.csv" class="btn btn-secondary" id="btn-export-so">📥 Ekspor SO (CSV)</a>
-                        <button type="button" class="btn btn-primary" id="btn-create-so" onclick="SimulasiModule.createSalesOrder()">
-                            ➕ Buat Sales Order Baru (Draft)
+                        <button type="button" class="btn btn-primary" id="btn-create-so">
+                            ➕ Buat Sales Order Baru
                         </button>
                     </div>
                 </div>
@@ -1893,6 +1893,186 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
             </div>
         </div>
     </div>
+
+    <!-- Modal Buat Sales Order Baru (SO) -->
+    <div id="modal-add-so" class="modal-overlay" hidden>
+        <div class="modal-card" style="max-width: 820px;">
+            <div class="modal-header">
+                <h3>📝 Buat Sales Order (SO) Baru</h3>
+                <button type="button" class="modal-close-btn" id="btn-close-add-so" title="Tutup Modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-add-so">
+                    <div id="add-so-error" class="form-message" role="alert" hidden style="margin-bottom: 14px;"></div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+                        <div class="field">
+                            <label for="new-so-customer" style="display:block; font-weight:600; margin-bottom: 4px;">Pilih Customer <span class="text-danger">*</span></label>
+                            <select id="new-so-customer" name="customer_id" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #fff;" required>
+                                <option value="">-- Pilih Customer --</option>
+                                <?php foreach ($customersList as $c): ?>
+                                    <option value="<?= (int)$c['id'] ?>"><?= $escape((string)$c['name']) ?> (<?= $escape((string)$c['code']) ?>)</option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="new-so-warehouse" style="display:block; font-weight:600; margin-bottom: 4px;">Pilih Gudang Pengiriman <span class="text-danger">*</span></label>
+                            <select id="new-so-warehouse" name="warehouse_id" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #fff;" required>
+                                <option value="">-- Pilih Gudang Pengiriman --</option>
+                                <?php foreach ($warehousesList as $w): ?>
+                                    <option value="<?= (int)$w['id'] ?>"><?= $escape((string)$w['name']) ?> (<?= $escape((string)$w['code']) ?> - <?= $escape((string)$w['city']) ?>)</option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tabel Item Produk Dinamis -->
+                    <div class="field" style="margin-bottom: 14px;">
+                        <label style="display:flex; justify-content:space-between; align-items:center; font-weight:600; margin-bottom: 6px;">
+                            <span>Daftar Item Barang / Produk <span class="text-danger">*</span></span>
+                            <button type="button" class="btn-sm btn-secondary" id="btn-add-so-item-row">➕ Tambah Baris Produk</button>
+                        </label>
+                        <div class="table-responsive" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                            <table class="data-table" style="margin: 0; width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th style="min-width: 250px;">Produk (SKU / Nama)</th>
+                                        <th style="width: 100px;">Qty</th>
+                                        <th style="width: 160px;">Harga Satuan (Rp)</th>
+                                        <th style="width: 150px;">Subtotal (Rp)</th>
+                                        <th style="width: 45px; text-align: center;">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="so-items-tbody">
+                                    <!-- Dynamic Rows Injected by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Grand Total Banner -->
+                    <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                        <div>
+                            <span class="text-muted" style="font-size: 13px;">Estimasi Total Nilai Sales Order:</span>
+                            <div style="font-size: 20px; font-weight: 700; color: var(--color-primary);" id="so-grand-total-text">Rp 0</div>
+                        </div>
+                        <div class="text-muted" style="font-size: 12px; text-align: right;">
+                            Aturan SOD: Sales membuat Draft &rarr; Diajukan ke Admin &rarr; Diproses Gudang
+                        </div>
+                    </div>
+
+                    <div class="field" style="margin-bottom: 14px;">
+                        <label for="new-so-notes" style="display:block; font-weight:600; margin-bottom: 4px;">Catatan Order (Opsional)</label>
+                        <textarea id="new-so-notes" name="notes" class="input" style="width:100%; height:60px; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="Contoh: Pengiriman prioritas sebelum akhir bulan"></textarea>
+                    </div>
+
+                    <div class="modal-actions-bar">
+                        <button type="button" class="modal-btn modal-btn-secondary" id="btn-cancel-add-so">Batal</button>
+                        <div class="modal-actions-right" style="display: flex; gap: 8px;">
+                            <button type="button" class="modal-btn modal-btn-secondary" id="btn-save-draft-so" style="border: 1px solid var(--border-color);">💾 Simpan sebagai Draft</button>
+                            <button type="submit" class="modal-btn modal-btn-primary" id="btn-submit-approval-so">🚀 Simpan &amp; Ajukan (Pending Approval)</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detail Sales Order (Rincian Item & Riwayat) -->
+    <div id="modal-detail-so" class="modal-overlay" hidden>
+        <div class="modal-card" style="max-width: 820px;">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <h3 id="detail-so-title">📦 Detail Sales Order</h3>
+                    <span id="detail-so-badge" class="badge"></span>
+                </div>
+                <button type="button" class="modal-close-btn" id="btn-close-detail-so" title="Tutup Modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="detail-so-loading" style="text-align: center; padding: 24px;" class="text-muted">
+                    Memuat data detail Sales Order...
+                </div>
+                <div id="detail-so-content" hidden>
+                    <!-- Info Grid -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; background: #f8fafc; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 16px;">
+                        <div>
+                            <small class="text-muted" style="display: block;">No. Sales Order</small>
+                            <strong id="detail-so-number" style="font-size: 15px;">-</strong>
+                        </div>
+                        <div>
+                            <small class="text-muted" style="display: block;">Customer</small>
+                            <strong id="detail-so-customer">-</strong>
+                        </div>
+                        <div>
+                            <small class="text-muted" style="display: block;">Gudang Asal</small>
+                            <strong id="detail-so-warehouse">-</strong>
+                        </div>
+                        <div>
+                            <small class="text-muted" style="display: block;">Sales Pembuat</small>
+                            <span id="detail-so-creator">-</span>
+                        </div>
+                        <div>
+                            <small class="text-muted" style="display: block;">Approver (Admin)</small>
+                            <span id="detail-so-approver">-</span>
+                        </div>
+                        <div>
+                            <small class="text-muted" style="display: block;">Tanggal Pembuatan</small>
+                            <span id="detail-so-date">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div id="detail-so-notes-container" style="margin-bottom: 16px; padding: 10px 14px; background: #fffbeb; border: 1px solid #fef3c7; border-radius: var(--radius-sm);" hidden>
+                        <small style="color: #92400e; font-weight: 600; display: block;">Catatan Khusus:</small>
+                        <span id="detail-so-notes" style="color: #78350f; font-size: 13px;">-</span>
+                    </div>
+
+                    <!-- Items Table -->
+                    <div style="margin-bottom: 16px;">
+                        <h4 style="margin: 0 0 8px 0; font-size: 14px;">Rincian Item Produk</h4>
+                        <div class="table-responsive" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                            <table class="data-table" style="margin: 0; width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th>SKU</th>
+                                        <th>Nama Produk</th>
+                                        <th style="text-align: right;">Kuantitas</th>
+                                        <th style="text-align: right;">Harga Satuan</th>
+                                        <th style="text-align: right;">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detail-so-items-body">
+                                </tbody>
+                                <tfoot>
+                                    <tr style="font-weight: 700; background: #f8fafc;">
+                                        <td colspan="4" style="text-align: right;">Total Nilai Pesanan:</td>
+                                        <td id="detail-so-total" style="text-align: right; color: var(--color-primary); font-size: 15px;">Rp 0</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Contextual Actions Bar Inside Detail Modal -->
+                    <div class="modal-actions-bar" style="border-top: 1px solid var(--border-color); padding-top: 14px;">
+                        <button type="button" class="modal-btn modal-btn-secondary" id="btn-close-detail-so-action">Tutup</button>
+                        <div id="detail-so-contextual-actions" style="display: flex; gap: 8px;">
+                            <!-- Injected dynamically based on role & status -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Katalog Produk untuk Helper JS Form SO -->
+    <script id="products-catalog-data" type="application/json"><?= json_encode(array_map(static fn($p) => [
+        'id' => (int)$p['id'],
+        'sku' => (string)$p['sku'],
+        'name' => (string)$p['name'],
+        'price' => (float)$p['selling_price'],
+        'stock' => (int)$p['total_stock'],
+    ], $productsStockSummary), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?></script>
 
 </body>
 </html>
