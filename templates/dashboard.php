@@ -1157,28 +1157,32 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                 <form id="form-add-user">
                     <div id="add-user-error" class="form-message" role="alert" hidden style="margin-bottom: 14px;"></div>
 
-                    <div class="field" style="margin-bottom: 14px;">
-                        <label for="new-user-name" style="display:block; font-weight:600; margin-bottom: 4px;">Nama Lengkap</label>
-                        <input type="text" id="new-user-name" name="name" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="Contoh: Rina Rahmawati" required maxlength="100">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px;">
+                        <div class="field">
+                            <label for="new-user-name" style="display:block; font-weight:600; margin-bottom: 4px;">Nama Lengkap</label>
+                            <input type="text" id="new-user-name" name="name" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="Contoh: Rina Rahmawati" required maxlength="100">
+                        </div>
+
+                        <div class="field">
+                            <label for="new-user-email" style="display:block; font-weight:600; margin-bottom: 4px;">Alamat Email</label>
+                            <input type="email" id="new-user-email" name="email" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="contoh: rina.sales@example.com" required maxlength="190">
+                        </div>
                     </div>
 
-                    <div class="field" style="margin-bottom: 14px;">
-                        <label for="new-user-email" style="display:block; font-weight:600; margin-bottom: 4px;">Alamat Email</label>
-                        <input type="email" id="new-user-email" name="email" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="contoh: rina.sales@example.com" required maxlength="190">
-                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px;">
+                        <div class="field">
+                            <label for="new-user-password" style="display:block; font-weight:600; margin-bottom: 4px;">Password Awal</label>
+                            <input type="password" id="new-user-password" name="password" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="Minimal 8 karakter" required minlength="8" maxlength="72">
+                        </div>
 
-                    <div class="field" style="margin-bottom: 14px;">
-                        <label for="new-user-password" style="display:block; font-weight:600; margin-bottom: 4px;">Password Awal</label>
-                        <input type="password" id="new-user-password" name="password" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="Minimal 8 karakter" required minlength="8" maxlength="72">
-                    </div>
-
-                    <div class="field" style="margin-bottom: 14px;">
-                        <label for="new-user-role" style="display:block; font-weight:600; margin-bottom: 4px;">Peran (Hak Akses SOD)</label>
-                        <select id="new-user-role" name="role" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #fff;">
-                            <option value="sales">Sales Staff (Katalog &amp; Buat SO)</option>
-                            <option value="warehouse">Staff Gudang (Goods Issue/Receipt, Usul PO)</option>
-                            <option value="admin">Admin System (Akses Penuh &amp; Approve)</option>
-                        </select>
+                        <div class="field">
+                            <label for="new-user-role" style="display:block; font-weight:600; margin-bottom: 4px;">Peran (Hak Akses SOD)</label>
+                            <select id="new-user-role" name="role" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #fff;">
+                                <option value="sales">Sales Staff (Katalog &amp; Buat SO)</option>
+                                <option value="warehouse">Staff Gudang (Goods Issue/Receipt, Usul PO)</option>
+                                <option value="admin">Admin System (Akses Penuh &amp; Approve)</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="field" style="margin-bottom: 20px;">
@@ -1215,49 +1219,44 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
 
                     <input type="hidden" id="edit-user-id" name="id">
 
-                    <div class="field" style="margin-bottom: 11px;">
-                        <label for="edit-user-code" style="display:block; font-weight:600; margin-bottom: 4px;">Kode Pengguna</label>
-                        <input type="text" id="edit-user-code" class="input" style="width:100%; padding: 7px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #f3f4f6;" readonly>
+                    <div style="display:grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 14px;">
+                        <div class="field">
+                            <label for="edit-user-code" style="display:block; font-weight:600; margin-bottom: 4px;">Kode Pengguna</label>
+                            <input type="text" id="edit-user-code" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #f3f4f6;" readonly>
+                        </div>
+
+                        <div class="field">
+                            <label for="edit-user-name" style="display:block; font-weight:600; margin-bottom: 4px;">Nama Lengkap</label>
+                            <input type="text" id="edit-user-name" name="name" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" required maxlength="100">
+                        </div>
                     </div>
 
-                    <div class="field" style="margin-bottom: 11px;">
-                        <label for="edit-user-name" style="display:block; font-weight:600; margin-bottom: 4px;">Nama Lengkap</label>
-                        <input type="text" id="edit-user-name" name="name" class="input" style="width:100%; padding: 7px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" required maxlength="100">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px;">
+                        <div class="field">
+                            <label for="edit-user-email" style="display:block; font-weight:600; margin-bottom: 4px;">Alamat Email</label>
+                            <input type="email" id="edit-user-email" name="email" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" required maxlength="190">
+                        </div>
+
+                        <div class="field">
+                            <label for="edit-user-password" style="display:block; font-weight:600; margin-bottom: 4px;">Password Baru <small class="text-muted">(Kosongkan jika tetap)</small></label>
+                            <input type="password" id="edit-user-password" name="password" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="Minimal 8 karakter jika ingin diubah" minlength="8" maxlength="72">
+                        </div>
                     </div>
 
-                    <div class="field" style="margin-bottom: 11px;">
-                        <label for="edit-user-email" style="display:block; font-weight:600; margin-bottom: 4px;">Alamat Email</label>
-                        <input type="email" id="edit-user-email" name="email" class="input" style="width:100%; padding: 7px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" required maxlength="190">
-                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px;">
+                        <div class="field">
+                            <label for="edit-user-role" style="display:block; font-weight:600; margin-bottom: 4px;">Peran (Hak Akses SOD)</label>
+                            <select id="edit-user-role" name="role" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #fff;">
+                                <option value="sales">Sales Staff (Katalog &amp; Buat SO)</option>
+                                <option value="warehouse">Staff Gudang (Goods Issue/Receipt, Usul PO)</option>
+                                <option value="admin">Admin System (Akses Penuh &amp; Approve)</option>
+                            </select>
+                        </div>
 
-                    <div class="field" style="margin-bottom: 11px;">
-                        <label for="edit-user-password" style="display:block; font-weight:600; margin-bottom: 4px;">Password Baru <small class="text-muted">(Kosongkan jika tidak ingin diubah)</small></label>
-                        <input type="password" id="edit-user-password" name="password" class="input" style="width:100%; padding: 7px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="Minimal 8 karakter jika ingin diubah" minlength="8" maxlength="72">
-                    </div>
-
-                    <div class="field" style="margin-bottom: 11px;">
-                        <label for="edit-user-role" style="display:block; font-weight:600; margin-bottom: 4px;">Peran (Hak Akses SOD)</label>
-                        <select id="edit-user-role" name="role" class="input" style="width:100%; padding: 7px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #fff;">
-                            <option value="sales">Sales Staff (Katalog &amp; Buat SO)</option>
-                            <option value="warehouse">Staff Gudang (Goods Issue/Receipt, Usul PO)</option>
-                            <option value="admin">Admin System (Akses Penuh &amp; Approve)</option>
-                        </select>
-                    </div>
-
-                    <div class="field" style="margin-bottom: 11px;">
-                        <label for="edit-user-warehouse" style="display:block; font-weight:600; margin-bottom: 4px;">Gudang Penugasan</label>
-                        <select id="edit-user-warehouse" name="warehouse" class="input" style="width:100%; padding: 7px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #fff;">
-                            <option value="Semua Gudang (Pusat)">Semua Gudang (Pusat)</option>
-                            <option value="Gudang Utama Jakarta">Gudang Utama Jakarta</option>
-                            <option value="Gudang Cabang Surabaya">Gudang Cabang Surabaya</option>
-                            <option value="Gudang Cabang Bandung">Gudang Cabang Bandung</option>
-                        </select>
-                    </div>
-
-                    <div class="field" style="margin-bottom: 14px;">
-                        <label for="edit-user-status" style="display:block; font-weight:600; margin-bottom: 4px;">Status Akun</label>
-                        <select id="edit-user-status" name="status" class="input" style="width:100%; padding: 7px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #fff;">
-                            <option value="active">Aktif (Dapat Login &amp; Transaksi)</option>
+                        <div class="field">
+                            <label for="edit-user-status" style="display:block; font-weight:600; margin-bottom: 4px;">Status Akun</label>
+                            <select id="edit-user-status" name="status" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #fff;">
+                                <option value="active">Aktif (Dapat Login &amp; Transaksi)</option>
                             <option value="inactive">Nonaktif (Diblokir)</option>
                         </select>
                     </div>
@@ -1378,14 +1377,16 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                 <form id="form-add-category">
                     <div id="add-category-error" class="form-message" role="alert" hidden style="margin-bottom: 14px;"></div>
 
-                    <div class="field" style="margin-bottom: 14px;">
-                        <label for="new-cat-code" style="display:block; font-weight:600; margin-bottom: 4px;">Kode Kategori</label>
-                        <input type="text" id="new-cat-code" name="code" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="Contoh: CAT-ACC" required maxlength="20">
-                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 14px;">
+                        <div class="field">
+                            <label for="new-cat-code" style="display:block; font-weight:600; margin-bottom: 4px;">Kode Kategori</label>
+                            <input type="text" id="new-cat-code" name="code" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="Contoh: CAT-ACC" required maxlength="20">
+                        </div>
 
-                    <div class="field" style="margin-bottom: 14px;">
-                        <label for="new-cat-name" style="display:block; font-weight:600; margin-bottom: 4px;">Nama Kategori</label>
-                        <input type="text" id="new-cat-name" name="name" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="Contoh: Aksesoris Komputer" required maxlength="100">
+                        <div class="field">
+                            <label for="new-cat-name" style="display:block; font-weight:600; margin-bottom: 4px;">Nama Kategori</label>
+                            <input type="text" id="new-cat-name" name="name" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="Contoh: Aksesoris Komputer" required maxlength="100">
+                        </div>
                     </div>
 
                     <div class="field" style="margin-bottom: 18px;">
@@ -1415,7 +1416,7 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                 <form id="form-add-warehouse">
                     <div id="add-warehouse-error" class="form-message" role="alert" hidden style="margin-bottom: 14px;"></div>
 
-                    <div style="display:grid; grid-template-columns: 1fr 2fr; gap: 12px; margin-bottom: 14px;">
+                    <div style="display:grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 14px;">
                         <div class="field">
                             <label for="new-wh-code" style="display:block; font-weight:600; margin-bottom: 4px;">Kode Gudang</label>
                             <input type="text" id="new-wh-code" name="code" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="WH-SMG" required maxlength="20">
@@ -1458,7 +1459,7 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                 <form id="form-add-supplier">
                     <div id="add-supplier-error" class="form-message" role="alert" hidden style="margin-bottom: 14px;"></div>
 
-                    <div style="display:grid; grid-template-columns: 1fr 2fr; gap: 12px; margin-bottom: 14px;">
+                    <div style="display:grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 14px;">
                         <div class="field">
                             <label for="new-sup-code" style="display:block; font-weight:600; margin-bottom: 4px;">Kode Supplier</label>
                             <input type="text" id="new-sup-code" name="code" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="SUP-003" required maxlength="20">
@@ -1469,7 +1470,7 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                         </div>
                     </div>
 
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 16px; margin-bottom: 14px;">
                         <div class="field">
                             <label for="new-sup-contact" style="display:block; font-weight:600; margin-bottom: 4px;">Contact Person</label>
                             <input type="text" id="new-sup-contact" name="contact_person" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="Bambang Santoso" maxlength="100">
@@ -1478,11 +1479,10 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                             <label for="new-sup-phone" style="display:block; font-weight:600; margin-bottom: 4px;">Nomor Telepon</label>
                             <input type="text" id="new-sup-phone" name="phone" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="021-5551234" maxlength="30">
                         </div>
-                    </div>
-
-                    <div class="field" style="margin-bottom: 14px;">
-                        <label for="new-sup-email" style="display:block; font-weight:600; margin-bottom: 4px;">Alamat Email</label>
-                        <input type="email" id="new-sup-email" name="email" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="sales@techindo.co.id" maxlength="190">
+                        <div class="field">
+                            <label for="new-sup-email" style="display:block; font-weight:600; margin-bottom: 4px;">Alamat Email</label>
+                            <input type="email" id="new-sup-email" name="email" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="sales@techindo.co.id" maxlength="190">
+                        </div>
                     </div>
 
                     <div class="field" style="margin-bottom: 18px;">
@@ -1512,7 +1512,7 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                 <form id="form-add-customer">
                     <div id="add-customer-error" class="form-message" role="alert" hidden style="margin-bottom: 14px;"></div>
 
-                    <div style="display:grid; grid-template-columns: 1fr 2fr; gap: 12px; margin-bottom: 14px;">
+                    <div style="display:grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 14px;">
                         <div class="field">
                             <label for="new-cust-code" style="display:block; font-weight:600; margin-bottom: 4px;">Kode Customer</label>
                             <input type="text" id="new-cust-code" name="code" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="CUST-004" required maxlength="20">
@@ -1523,7 +1523,7 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                         </div>
                     </div>
 
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 16px; margin-bottom: 14px;">
                         <div class="field">
                             <label for="new-cust-contact" style="display:block; font-weight:600; margin-bottom: 4px;">Contact Person</label>
                             <input type="text" id="new-cust-contact" name="contact_person" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="Dedi Suryana" maxlength="100">
@@ -1532,11 +1532,10 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                             <label for="new-cust-phone" style="display:block; font-weight:600; margin-bottom: 4px;">Nomor Telepon</label>
                             <input type="text" id="new-cust-phone" name="phone" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="0812-9876543" maxlength="30">
                         </div>
-                    </div>
-
-                    <div class="field" style="margin-bottom: 14px;">
-                        <label for="new-cust-email" style="display:block; font-weight:600; margin-bottom: 4px;">Alamat Email</label>
-                        <input type="email" id="new-cust-email" name="email" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="procurement@suksesmakmur.com" maxlength="190">
+                        <div class="field">
+                            <label for="new-cust-email" style="display:block; font-weight:600; margin-bottom: 4px;">Alamat Email</label>
+                            <input type="email" id="new-cust-email" name="email" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="procurement@suksesmakmur.com" maxlength="190">
+                        </div>
                     </div>
 
                     <div class="field" style="margin-bottom: 18px;">
@@ -1656,7 +1655,7 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                     <div id="edit-category-error" class="form-message" role="alert" hidden style="margin-bottom: 14px;"></div>
                     <input type="hidden" id="edit-cat-id" name="id">
 
-                    <div style="display:grid; grid-template-columns: 1fr 2fr; gap: 12px; margin-bottom: 14px;">
+                    <div style="display:grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 14px;">
                         <div class="field">
                             <label for="edit-cat-code" style="display:block; font-weight:600; margin-bottom: 4px;">Kode Kategori</label>
                             <input type="text" id="edit-cat-code" name="code" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" required maxlength="20">
@@ -1707,7 +1706,7 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                     <div id="edit-warehouse-error" class="form-message" role="alert" hidden style="margin-bottom: 14px;"></div>
                     <input type="hidden" id="edit-wh-id" name="id">
 
-                    <div style="display:grid; grid-template-columns: 1fr 2fr; gap: 12px; margin-bottom: 14px;">
+                    <div style="display:grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 14px;">
                         <div class="field">
                             <label for="edit-wh-code" style="display:block; font-weight:600; margin-bottom: 4px;">Kode Gudang</label>
                             <input type="text" id="edit-wh-code" name="code" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" required maxlength="20">
@@ -1718,7 +1717,7 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                         </div>
                     </div>
 
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px;">
                         <div class="field">
                             <label for="edit-wh-city" style="display:block; font-weight:600; margin-bottom: 4px;">Kota / Wilayah</label>
                             <input type="text" id="edit-wh-city" name="city" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" required maxlength="50">
@@ -1772,7 +1771,7 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                     <div id="edit-supplier-error" class="form-message" role="alert" hidden style="margin-bottom: 14px;"></div>
                     <input type="hidden" id="edit-sup-id" name="id">
 
-                    <div style="display:grid; grid-template-columns: 1fr 2fr; gap: 12px; margin-bottom: 14px;">
+                    <div style="display:grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 14px;">
                         <div class="field">
                             <label for="edit-sup-code" style="display:block; font-weight:600; margin-bottom: 4px;">Kode Supplier</label>
                             <input type="text" id="edit-sup-code" name="code" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" required maxlength="20">
@@ -1783,7 +1782,7 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                         </div>
                     </div>
 
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 16px; margin-bottom: 14px;">
                         <div class="field">
                             <label for="edit-sup-contact" style="display:block; font-weight:600; margin-bottom: 4px;">Contact Person</label>
                             <input type="text" id="edit-sup-contact" name="contact_person" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" maxlength="100">
@@ -1792,11 +1791,10 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                             <label for="edit-sup-phone" style="display:block; font-weight:600; margin-bottom: 4px;">Nomor Telepon</label>
                             <input type="text" id="edit-sup-phone" name="phone" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" maxlength="30">
                         </div>
-                    </div>
-
-                    <div class="field" style="margin-bottom: 14px;">
-                        <label for="edit-sup-email" style="display:block; font-weight:600; margin-bottom: 4px;">Alamat Email</label>
-                        <input type="email" id="edit-sup-email" name="email" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" maxlength="190">
+                        <div class="field">
+                            <label for="edit-sup-email" style="display:block; font-weight:600; margin-bottom: 4px;">Alamat Email</label>
+                            <input type="email" id="edit-sup-email" name="email" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" maxlength="190">
+                        </div>
                     </div>
 
                     <div class="field" style="margin-bottom: 18px;">
@@ -1839,7 +1837,7 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                     <div id="edit-customer-error" class="form-message" role="alert" hidden style="margin-bottom: 14px;"></div>
                     <input type="hidden" id="edit-cust-id" name="id">
 
-                    <div style="display:grid; grid-template-columns: 1fr 2fr; gap: 12px; margin-bottom: 14px;">
+                    <div style="display:grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 14px;">
                         <div class="field">
                             <label for="edit-cust-code" style="display:block; font-weight:600; margin-bottom: 4px;">Kode Customer</label>
                             <input type="text" id="edit-cust-code" name="code" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" required maxlength="20">
@@ -1850,7 +1848,7 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                         </div>
                     </div>
 
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 16px; margin-bottom: 14px;">
                         <div class="field">
                             <label for="edit-cust-contact" style="display:block; font-weight:600; margin-bottom: 4px;">Contact Person</label>
                             <input type="text" id="edit-cust-contact" name="contact_person" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" maxlength="100">
@@ -1859,11 +1857,10 @@ $readyGICount = $readyGICount ?? count(array_filter($salesOrdersList, static fn(
                             <label for="edit-cust-phone" style="display:block; font-weight:600; margin-bottom: 4px;">Nomor Telepon</label>
                             <input type="text" id="edit-cust-phone" name="phone" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" maxlength="30">
                         </div>
-                    </div>
-
-                    <div class="field" style="margin-bottom: 14px;">
-                        <label for="edit-cust-email" style="display:block; font-weight:600; margin-bottom: 4px;">Alamat Email</label>
-                        <input type="email" id="edit-cust-email" name="email" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" maxlength="190">
+                        <div class="field">
+                            <label for="edit-cust-email" style="display:block; font-weight:600; margin-bottom: 4px;">Alamat Email</label>
+                            <input type="email" id="edit-cust-email" name="email" class="input" style="width:100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" maxlength="190">
+                        </div>
                     </div>
 
                     <div class="field" style="margin-bottom: 18px;">

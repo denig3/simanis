@@ -1056,6 +1056,9 @@ button:active {
 
 /* Operational Flow Step List */
 .flow-steps-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
     list-style: none;
     padding: 0;
     margin: 0;
@@ -1063,12 +1066,17 @@ button:active {
 
 .flow-steps-list li {
     display: flex;
-    gap: 14px;
-    margin-bottom: 16px;
+    flex-direction: column;
+    gap: 10px;
+    background: #f8fafc;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    margin: 0;
 }
 
 .flow-steps-list li:last-child {
-    margin-bottom: 0;
+    margin: 0;
 }
 
 .step-num {
@@ -1158,21 +1166,17 @@ button:active {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
-    width: 100%;
-    max-width: 540px;
+    width: 95vw;
+    max-width: 1050px;
     max-height: 90vh;
     display: flex;
     flex-direction: column;
     animation: slideUpModal 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.modal-card-lg {
-    max-width: 860px;
-    width: 92vw;
-}
-
+.modal-card-lg,
 .modal-card-xl {
-    max-width: 1100px;
+    max-width: 1050px;
     width: 95vw;
 }
 
