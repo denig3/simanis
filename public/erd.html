@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entity Relationship Diagram (ERD) — Sistem Stokora</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --border: rgba(255, 255, 255, 0.1);
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.2);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #2563eb;
+      --gold: #fbbf24;
+      --emerald: #10b981;
+      --purple: #a855f7;
+      --rose: #f43f5e;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: radial-gradient(circle at top center, #1e293b, #0b1120 80%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 1.1rem 2rem;
+      background: rgba(11, 17, 32, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #38bdf8, #2563eb);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.3rem;
+      color: white;
+      box-shadow: 0 4px 14px var(--accent-glow);
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .nav-tabs {
+      display: flex;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.25rem;
+      gap: 0.35rem;
+    }
+
+    .tab-btn {
+      padding: 0.5rem 1.1rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active {
+      background: #2563eb;
+      color: white;
+      box-shadow: 0 2px 10px rgba(37, 99, 235, 0.4);
+    }
+
+    .tab-btn:hover:not(.active) {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background: rgba(51, 65, 85, 0.9);
+      border-color: var(--accent);
+    }
+
+    /* Container Area */
+    .view-content {
+      position: absolute;
+      top: -99999px;
+      left: -99999px;
+      opacity: 0;
+      pointer-events: none;
+      width: 100%;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .view-content.active {
+      position: static;
+      opacity: 1;
+      pointer-events: auto;
+      display: block;
+    }
+
+    /* PYRAMID VISUAL LAYOUT */
+    .pyramid-hero {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .pyramid-hero h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, #f8fafc, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .pyramid-hero p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      max-width: 750px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .pyramid-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+      margin-bottom: 3.5rem;
+    }
+
+    .pyramid-tier {
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(16px);
+      padding: 1.5rem 2rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    }
+
+    .pyramid-tier::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 6px;
+    }
+
+    .tier-4 {
+      max-width: 720px;
+      border-color: rgba(251, 191, 36, 0.4);
+      background: linear-gradient(180deg, rgba(251, 191, 36, 0.08), rgba(15, 23, 42, 0.9));
+    }
+    .tier-4::before { background: var(--gold); }
+
+    .tier-3 {
+      max-width: 900px;
+      border-color: rgba(168, 85, 247, 0.35);
+      background: linear-gradient(180deg, rgba(168, 85, 247, 0.06), rgba(15, 23, 42, 0.9));
+    }
+    .tier-3::before { background: var(--purple); }
+
+    .tier-2 {
+      max-width: 1080px;
+      border-color: rgba(56, 189, 248, 0.35);
+      background: linear-gradient(180deg, rgba(56, 189, 248, 0.06), rgba(15, 23, 42, 0.9));
+    }
+    .tier-2::before { background: var(--accent); }
+
+    .tier-1 {
+      max-width: 1240px;
+      border-color: rgba(16, 185, 129, 0.35);
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.06), rgba(15, 23, 42, 0.9));
+    }
+    .tier-1::before { background: var(--emerald); }
+
+    .tier-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 0.75rem;
+    }
+
+    .tier-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .tier-badge {
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+    }
+
+    .tier-4 .tier-badge { background: rgba(251, 191, 36, 0.2); color: var(--gold); border: 1px solid rgba(251, 191, 36, 0.4); }
+    .tier-3 .tier-badge { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4); }
+    .tier-2 .tier-badge { background: rgba(56, 189, 248, 0.2); color: var(--accent); border: 1px solid rgba(56, 189, 248, 0.4); }
+    .tier-1 .tier-badge { background: rgba(16, 185, 129, 0.2); color: var(--emerald); border: 1px solid rgba(16, 185, 129, 0.4); }
+
+    .tier-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .tier-purpose {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .tables-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+
+    .table-chip {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      transition: all 0.2s ease;
+    }
+
+    .table-chip:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .table-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .table-desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .pyramid-connector {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 600;
+      gap: 0.2rem;
+    }
+
+    .pyramid-connector span {
+      background: rgba(15, 23, 42, 0.8);
+      padding: 0.2rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+    }
+
+    /* ACTORS INVOLVED STYLING */
+    .actors-bar {
+      margin-top: 1.15rem;
+      padding-top: 0.85rem;
+      border-top: 1px dashed rgba(255, 255, 255, 0.12);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      font-size: 0.8rem;
+    }
+
+    .actors-label {
+      font-weight: 800;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .actor-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.75rem;
+      letter-spacing: -0.01em;
+    }
+
+    .actor-admin { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); }
+    .actor-sales { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); }
+    .actor-wh { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.35); }
+    .actor-cust { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.35); }
+    .actor-supp { background: rgba(244, 63, 94, 0.15); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.35); }
+    .actor-sys { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.35); }
+
+    .actor-role-note {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+
+    /* MODULE SELECTOR IN CLASSIC VIEW */
+    .module-filter-bar {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .mod-filter-btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(30, 41, 59, 0.6);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .mod-filter-btn.active {
+      background: #2563eb;
+      color: white;
+      border-color: #3b82f6;
+    }
+
+    .mod-filter-btn:hover:not(.active) {
+      background: rgba(51, 65, 85, 0.8);
+      color: var(--text);
+    }
+
+    /* DIAGRAM BOX */
+    .diagram-panel {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      position: relative;
+    }
+
+    .diagram-panel h3 {
+      font-size: 1.15rem;
+      margin-bottom: 0.4rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .diagram-panel p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1.25rem;
+    }
+
+    .mermaid-viewport {
+      background: #090e17;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 1.5rem;
+      overflow-x: auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 250px;
+    }
+
+    .module-erd-block {
+      position: absolute;
+      top: -99999px;
+      left: -99999px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .module-erd-block.active {
+      position: static;
+      opacity: 1;
+      pointer-events: auto;
+      display: block;
+    }
+
+    /* TABLE DICTIONARY CARDS */
+    .dictionary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1.5rem;
+    }
+
+    .dict-card {
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+
+    .dict-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: var(--accent);
+      font-size: 1rem;
+      margin-bottom: 0.35rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .dict-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+      line-height: 1.4;
+    }
+
+    .dict-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.75rem;
+    }
+
+    .dict-table th {
+      text-align: left;
+      padding: 0.35rem 0.5rem;
+      background: rgba(15, 23, 42, 0.6);
+      color: var(--text-muted);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .dict-table td {
+      padding: 0.4rem 0.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: #e2e8f0;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .key-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    .key-pk { background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); }
+    .key-fk { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
+    .key-uq { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-logo">S</div>
+      <div>
+        <div class="brand-title">Stokora — Arsitektur ERD Database</div>
+        <div class="brand-subtitle">Hierarki Data & Relasi 17 Tabel Sistem Multigudang</div>
+      </div>
+    </div>
+
+    <!-- TAB SELECTOR -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchMainTab('pyramid')">
+        🏛️ Skema Piramida (Mudah Dibaca)
+      </button>
+      <button class="tab-btn" onclick="switchMainTab('classic')">
+        🕸️ ERD Relasi Per Modul (Jelas & Terfokus)
+      </button>
+    </div>
+
+    <div class="actions">
+      <a href="/dashboard" class="btn">⬅ Kembali ke Dashboard</a>
+    </div>
+  </header>
+
+  <!-- VIEW 1: SKEMA PIRAMIDA -->
+  <main id="view-pyramid" class="view-content active">
+    
+    <div class="pyramid-hero">
+      <h1>Skema Piramida Database (4 Tingkatan Hierarki)</h1>
+      <p>
+        Membaca database tidak perlu rumit. Database Stokora tersusun atas 4 lapisan alami: 
+        dimulai dari <strong>Fondasi Master Data</strong> di bawah, naik ke <strong>Kesepakatan Order</strong>, 
+        lalu ke <strong>Eksekusi Fisik</strong>, hingga bermuara ke <strong>Puncak Kebenaran Stok & Audit Trail</strong>.
+      </p>
+    </div>
+
+    <div class="pyramid-container">
+
+      <!-- LEVEL 4 (PUNCAK) -->
+      <div class="pyramid-tier tier-4">
+        <div class="tier-header">
+          <div class="tier-title-wrap">
+            <span class="tier-badge">Level 4 — Puncak</span>
+            <div class="tier-title">👑 Saldo Stok Realtime &amp; Audit Trail (The Ultimate Truth)</div>
+          </div>
+          <div class="tier-purpose">Muara akhir semua transaksi sistem</div>
+        </div>
+        <div class="tables-grid">
+          <div class="table-chip">
+            <div class="table-name">📦 inventory_stocks</div>
+            <div class="table-desc">Saldo cepat multigudang: fisik di rak (on_hand), terkunci (reserved), dan dipesan (incoming).</div>
+          </div>
+          <div class="table-chip">
+            <div class="table-name">📜 stock_ledger</div>
+            <div class="table-desc">Buku besar mutasi kartu stok. <em>Immutable (anti-manipulasi)</em> untuk audit detil detik per detik.</div>
+          </div>
+        </div>
+        <!-- AKTOR TIER 4 -->
+        <div class="actors-bar">
+          <span class="actors-label">👥 Aktor Terlibat:</span>
+          <span class="actor-tag actor-admin">👑 Admin (Audit &amp; Rekapitulasi)</span>
+          <span class="actor-tag actor-wh">📦 Staf Gudang (Pantau Saldo Fisik)</span>
+          <span class="actor-tag actor-sys">🤖 Engine Sistem (Kalkulasi Otomatis Stok &amp; Ledger)</span>
+          <span class="actor-role-note">💡 Dihitung otomatis oleh sistem saat barang masuk/keluar</span>
+        </div>
+      </div>
+
+      <!-- CONNECTOR 3-4 -->
+      <div class="pyramid-connector">
+        <span>▲ Mengubah saldo stok &amp; mencatat mutasi bukti fisik</span>
+        <div style="font-size:1.1rem;">▲</div>
+      </div>
+
+      <!-- LEVEL 3 -->
+      <div class="pyramid-tier tier-3">
+        <div class="tier-header">
+          <div class="tier-title-wrap">
+            <span class="tier-badge">Level 3 — Eksekusi</span>
+            <div class="tier-title">🚚 Eksekusi Fisik Lapangan (Barang Bergerak)</div>
+          </div>
+          <div class="tier-purpose">Truk sampai di gudang &amp; paket keluar pintu</div>
+        </div>
+        <div class="tables-grid">
+          <div class="table-chip">
+            <div class="table-name">📥 goods_receipts</div>
+            <div class="table-desc">Tanda terima bongkar muat barang dari truk supplier.</div>
+          </div>
+          <div class="table-chip">
+            <div class="table-name">📝 goods_receipt_items</div>
+            <div class="table-desc">Jumlah fisik barang aktual yang dihitung staf gudang.</div>
+          </div>
+          <div class="table-chip">
+            <div class="table-name">📤 goods_issues</div>
+            <div class="table-desc">Surat jalan pengeluaran barang pesanan pelanggan.</div>
+          </div>
+          <div class="table-chip">
+            <div class="table-name">📋 goods_issue_items</div>
+            <div class="table-desc">Kuantitas barang yang diambil dari rak dan dikirim.</div>
+          </div>
+        </div>
+        <!-- AKTOR TIER 3 -->
+        <div class="actors-bar">
+          <span class="actors-label">👥 Aktor Terlibat:</span>
+          <span class="actor-tag actor-wh">📦 Staf Gudang (Eksekutor Fisik Bongkar &amp; Kirim)</span>
+          <span class="actor-tag actor-supp">🚚 Supir / Truk Pemasok (Antar Pasokan)</span>
+          <span class="actor-tag actor-cust">🏢 Kurir Ekspedisi (Kirim ke Customer)</span>
+          <span class="actor-role-note">💡 Menghitung fisik aktual di gerbang &amp; rak gudang</span>
+        </div>
+      </div>
+
+      <!-- CONNECTOR 2-3 -->
+      <div class="pyramid-connector">
+        <span>▲ Dieksekusi fisiknya saat barang tiba atau disiapkan</span>
+        <div style="font-size:1.1rem;">▲</div>
+      </div>
+
+      <!-- LEVEL 2 -->
+      <div class="pyramid-tier tier-2">
+        <div class="tier-header">
+          <div class="tier-title-wrap">
+            <span class="tier-badge">Level 2 — Komitmen</span>
+            <div class="tier-title">💼 Dokumen Transaksi &amp; Order (Business Commitment)</div>
+          </div>
+          <div class="tier-purpose">Kesepakatan harga, jumlah, &amp; persetujuan (Approval)</div>
+        </div>
+        <div class="tables-grid">
+          <div class="table-chip">
+            <div class="table-name">🛒 sales_orders</div>
+            <div class="table-desc">Order penjualan ke customer + aturan Segregation of Duties (SoD) persetujuan Admin.</div>
+          </div>
+          <div class="table-chip">
+            <div class="table-name">📄 sales_order_items</div>
+            <div class="table-desc">Rincian produk, kuantitas, harga jual, dan subtotal order penjualan.</div>
+          </div>
+          <div class="table-chip">
+            <div class="table-name">📑 purchase_orders</div>
+            <div class="table-desc">Order pengadaan barang restock ke supplier ketika stok minimum tercapai.</div>
+          </div>
+          <div class="table-chip">
+            <div class="table-name">📑 purchase_order_items</div>
+            <div class="table-desc">Rincian produk, kuantitas pengadaan, harga beli, dan total biaya.</div>
+          </div>
+        </div>
+        <!-- AKTOR TIER 2 -->
+        <div class="actors-bar">
+          <span class="actors-label">👥 Aktor Terlibat:</span>
+          <span class="actor-tag actor-sales">💼 Staf Sales (Pembuat Nota Penjualan)</span>
+          <span class="actor-tag actor-admin">👑 Admin (Penyetuju / Approver Transaksi)</span>
+          <span class="actor-tag actor-wh">📦 Staf Gudang (Pengusul Restock PO)</span>
+          <span class="actor-role-note">🛡️ SoD Matrix: Sales tidak bisa menyetujui orderannya sendiri</span>
+        </div>
+      </div>
+
+      <!-- CONNECTOR 1-2 -->
+      <div class="pyramid-connector">
+        <span>▲ Menggunakan data barang, harga, rekanan, dan user pembuat</span>
+        <div style="font-size:1.1rem;">▲</div>
+      </div>
+
+      <!-- LEVEL 1 (PONDASI) -->
+      <div class="pyramid-tier tier-1">
+        <div class="tier-header">
+          <div class="tier-title-wrap">
+            <span class="tier-badge">Level 1 — Fondasi</span>
+            <div class="tier-title">🏛️ Pondasi Master Data &amp; Hak Akses (Ground Foundation)</div>
+          </div>
+          <div class="tier-purpose">Siapa pelakunya, di mana tempatnya, &amp; apa barangnya</div>
+        </div>
+        <div class="tables-grid">
+          <div class="table-chip">
+            <div class="table-name">👥 users</div>
+            <div class="table-desc">Akun Admin, Sales, Gudang beserta peran wewenang.</div>
+          </div>
+          <div class="table-chip">
+            <div class="table-name">🛡️ login_attempts</div>
+            <div class="table-desc">Keamanan proteksi brute-force login.</div>
+          </div>
+          <div class="table-chip">
+            <div class="table-name">🏪 warehouses</div>
+            <div class="table-desc">Lokasi gudang fisik (Jakarta, Surabaya, Bandung).</div>
+          </div>
+          <div class="table-chip">
+            <div class="table-name">🏷️ categories</div>
+            <div class="table-desc">Klasifikasi jenis barang (Elektronik, Aksesori, dll).</div>
+          </div>
+          <div class="table-chip">
+            <div class="table-name">📦 products</div>
+            <div class="table-desc">Katalog produk, SKU unik, harga jual/beli, batas alarm stok.</div>
+          </div>
+          <div class="table-chip">
+            <div class="table-name">🏢 customers</div>
+            <div class="table-desc">Data klien/pelanggan pembeli barang.</div>
+          </div>
+          <div class="table-chip">
+            <div class="table-name">🏭 suppliers</div>
+            <div class="table-desc">Data pabrik/vendor pemasok barang.</div>
+          </div>
+        </div>
+        <!-- AKTOR TIER 1 -->
+        <div class="actors-bar">
+          <span class="actors-label">👥 Aktor Terlibat:</span>
+          <span class="actor-tag actor-admin">👑 Admin (Pengelola Akun &amp; Master Data)</span>
+          <span class="actor-tag actor-cust">🏢 Customer (Rekanan Pelanggan)</span>
+          <span class="actor-tag actor-supp">🏭 Supplier (Rekanan Pemasok)</span>
+          <span class="actor-role-note">💡 Data induk wajib tersedia sebelum transaksi berjalan</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- DIAGRAM ALIRAN PIRAMIDA MERMAID -->
+    <div class="diagram-panel">
+      <h3>Diagram Aliran Tingkatan Piramida Beserta Aktor Pelaksana</h3>
+      <p>Peta visual peran setiap aktor dalam mengalirkan data dari pondasi hingga saldo akhir:</p>
+      <div class="mermaid-viewport">
+        <div class="mermaid">
+flowchart BT
+    classDef foundation fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#ecfdf5;
+    classDef commitment fill:#0c4a6e,stroke:#38bdf8,stroke-width:2px,color:#f0f9ff;
+    classDef execution fill:#581c87,stroke:#c084fc,stroke-width:2px,color:#faf5ff;
+    classDef summit fill:#78350f,stroke:#fbbf24,stroke-width:2px,color:#fffbeb;
+    classDef actorBox fill:#1e293b,stroke:#f59e0b,stroke-width:1.5px,color:#fbbf24;
+
+    subgraph LEVEL_1 ["Level 1: FONDASI MASTER DATA"]
+        direction LR
+        L1_ACT["Aktor: Admin, Customer, Supplier"]:::actorBox
+        L1_DATA["Pondasi: users, warehouses, products, categories, partners"]:::foundation
+    end
+
+    subgraph LEVEL_2 ["Level 2: DOKUMEN KOMITMEN TRANSAKSI"]
+        direction LR
+        L2_ACT["Aktor: Sales buat SO, Admin approve, Gudang usul PO"]:::actorBox
+        L2_DATA["Dokumen: sales_orders, purchase_orders, dan item"]:::commitment
+    end
+
+    subgraph LEVEL_3 ["Level 3: EKSEKUSI FISIK GUDANG"]
+        direction LR
+        L3_ACT["Aktor: Staf Gudang bongkar muat, Kurir Ekspedisi"]:::actorBox
+        L3_DATA["Bukti Fisik: goods_issues keluar, goods_receipts masuk"]:::execution
+    end
+
+    subgraph LEVEL_4 ["Level 4: PUNCAK REALTIME DAN AUDIT"]
+        direction LR
+        L4_ACT["Aktor: Engine Sistem, Admin audit, Gudang cek saldo"]:::actorBox
+        L4_DATA["Hasil Akhir: inventory_stocks dan stock_ledger"]:::summit
+    end
+
+    L1_DATA ==>|Data acuan| L2_DATA
+    L2_DATA ==>|Surat jalan dan PO| L3_DATA
+    L3_DATA ==>|Update saldo fisik aktual| L4_DATA
+    L2_DATA -.->|Kunci kuota reserved| L4_DATA
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- VIEW 2: ERD KLASIK PER MODUL (SANGAT BERSIH & TERBACA) -->
+  <main id="view-classic" class="view-content">
+    
+    <div style="margin-bottom: 1.5rem;">
+      <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.35rem;">Diagram ERD Relasi Antar Tabel (Fokus Per Modul)</h2>
+      <p style="font-size: 0.9rem; color: var(--text-muted);">
+        Daripada menampilkan 17 tabel sekaligus yang kusut dan bertumpuk, pilih modul di bawah untuk melihat relasi, Primary Key, dan Foreign Key secara bersih dan tajam:
+      </p>
+    </div>
+
+    <!-- FILTER MODUL -->
+    <div class="module-filter-bar">
+      <button class="mod-filter-btn active" onclick="switchModule('mod-so')">🛒 1. Modul Penjualan (SO &amp; GI)</button>
+      <button class="mod-filter-btn" onclick="switchModule('mod-po')">🚚 2. Modul Pengadaan (PO &amp; GR)</button>
+      <button class="mod-filter-btn" onclick="switchModule('mod-master')">📦 3. Modul Master Data &amp; Gudang</button>
+      <button class="mod-filter-btn" onclick="switchModule('mod-stock')">📜 4. Modul Saldo &amp; Audit Ledger</button>
+      <button class="mod-filter-btn" onclick="switchModule('mod-all')">🌐 5. Ikhtisar Seluruh Relasi</button>
+    </div>
+
+    <!-- MODUL 1: SALES ORDER -->
+    <div id="mod-so" class="module-erd-block active">
+      <div class="diagram-panel">
+        <h3>🛒 ERD Modul Penjualan (Sales Orders &amp; Goods Issues)</h3>
+        <p>Alur ketika pelanggan memesan barang sampai barang fisik keluar dari gudang:</p>
+        <div class="mermaid-viewport">
+          <div class="mermaid">
+erDiagram
+    CUSTOMERS ||--o{ SALES_ORDERS : "membuat_pesanan"
+    WAREHOUSES ||--o{ SALES_ORDERS : "gudang_asal"
+    USERS ||--o{ SALES_ORDERS : "created_by"
+    USERS ||--o{ SALES_ORDERS : "approved_by"
+    SALES_ORDERS ||--|{ SALES_ORDER_ITEMS : "memiliki_rincian"
+    PRODUCTS ||--o{ SALES_ORDER_ITEMS : "barang_pesanan"
+
+    SALES_ORDERS ||--o{ GOODS_ISSUES : "dikeluarkan_via"
+    WAREHOUSES ||--o{ GOODS_ISSUES : "gudang_keluar"
+    USERS ||--o{ GOODS_ISSUES : "issued_by"
+    GOODS_ISSUES ||--|{ GOODS_ISSUE_ITEMS : "rincian_barang"
+    PRODUCTS ||--o{ GOODS_ISSUE_ITEMS : "barang_keluar"
+          </div>
+        </div>
+
+        <div class="dictionary-grid">
+          <div class="dict-card">
+            <div class="dict-title">sales_orders <span class="key-badge key-pk">PK: id</span></div>
+            <div class="dict-desc">Nota pesanan penjualan, status approval, total nilai, dan penegakan Segregation of Duties (SoD).</div>
+            <table class="dict-table">
+              <tr><th>Kolom</th><th>Tipe Data</th><th>Keterangan</th></tr>
+              <tr><td>so_number</td><td>varchar(50)</td><td><span class="key-badge key-uq">UNIQUE</span> Nomor SO</td></tr>
+              <tr><td>customer_id</td><td>bigint</td><td><span class="key-badge key-fk">FK</span> -> customers.id</td></tr>
+              <tr><td>warehouse_id</td><td>bigint</td><td><span class="key-badge key-fk">FK</span> -> warehouses.id</td></tr>
+              <tr><td>status</td><td>enum(...)</td><td>draft, pending, approved, fulfilled</td></tr>
+              <tr><td>created_by</td><td>bigint</td><td><span class="key-badge key-fk">FK</span> -> users.id (Sales)</td></tr>
+              <tr><td>approved_by</td><td>bigint</td><td><span class="key-badge key-fk">FK</span> -> users.id (Admin)</td></tr>
+            </table>
+          </div>
+
+          <div class="dict-card">
+            <div class="dict-title">sales_order_items <span class="key-badge key-pk">PK: id</span></div>
+            <div class="dict-desc">Item barang di dalam satu nota Sales Order. CASCADE hapus jika SO dibatalkan/dihapus.</div>
+            <table class="dict-table">
+              <tr><th>Kolom</th><th>Tipe Data</th><th>Keterangan</th></tr>
+              <tr><td>sales_order_id</td><td>bigint</td><td><span class="key-badge key-fk">FK</span> -> sales_orders.id</td></tr>
+              <tr><td>product_id</td><td>bigint</td><td><span class="key-badge key-fk">FK</span> -> products.id</td></tr>
+              <tr><td>quantity</td><td>int</td><td>Jumlah unit yang dipesan</td></tr>
+              <tr><td>unit_price</td><td>decimal(15,2)</td><td>Harga jual satuan</td></tr>
+              <tr><td>subtotal</td><td>decimal(15,2)</td><td>qty * unit_price</td></tr>
+            </table>
+          </div>
+
+          <div class="dict-card">
+            <div class="dict-title">goods_issues <span class="key-badge key-pk">PK: id</span></div>
+            <div class="dict-desc">Surat jalan pengeluaran fisik barang dari pintu gudang untuk pesanan yang disetujui.</div>
+            <table class="dict-table">
+              <tr><th>Kolom</th><th>Tipe Data</th><th>Keterangan</th></tr>
+              <tr><td>gi_number</td><td>varchar(50)</td><td><span class="key-badge key-uq">UNIQUE</span> Nomor GI</td></tr>
+              <tr><td>sales_order_id</td><td>bigint</td><td><span class="key-badge key-fk">FK</span> -> sales_orders.id</td></tr>
+              <tr><td>warehouse_id</td><td>bigint</td><td><span class="key-badge key-fk">FK</span> -> warehouses.id</td></tr>
+              <tr><td>issued_by</td><td>bigint</td><td><span class="key-badge key-fk">FK</span> -> users.id (Gudang)</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODUL 2: PURCHASE ORDER -->
+    <div id="mod-po" class="module-erd-block">
+      <div class="diagram-panel">
+        <h3>🚚 ERD Modul Pengadaan (Purchase Orders &amp; Goods Receipts)</h3>
+        <p>Alur pemesanan barang restock ke pemasok sampai truk membongkar muatan di gudang:</p>
+        <div class="mermaid-viewport">
+          <div class="mermaid">
+erDiagram
+    SUPPLIERS ||--o{ PURCHASE_ORDERS : "menerima_order"
+    WAREHOUSES ||--o{ PURCHASE_ORDERS : "gudang_tujuan"
+    USERS ||--o{ PURCHASE_ORDERS : "created_by"
+    USERS ||--o{ PURCHASE_ORDERS : "approved_by"
+    PURCHASE_ORDERS ||--|{ PURCHASE_ORDER_ITEMS : "memiliki_rincian"
+    PRODUCTS ||--o{ PURCHASE_ORDER_ITEMS : "barang_dipesan"
+
+    PURCHASE_ORDERS ||--o{ GOODS_RECEIPTS : "diterima_via"
+    WAREHOUSES ||--o{ GOODS_RECEIPTS : "gudang_penerima"
+    USERS ||--o{ GOODS_RECEIPTS : "received_by"
+    GOODS_RECEIPTS ||--|{ GOODS_RECEIPT_ITEMS : "rincian_barang"
+    PRODUCTS ||--o{ GOODS_RECEIPT_ITEMS : "barang_masuk"
+          </div>
+        </div>
+
+        <div class="dictionary-grid">
+          <div class="dict-card">
+            <div class="dict-title">purchase_orders <span class="key-badge key-pk">PK: id</span></div>
+            <div class="dict-desc">Dokumen pemesanan pasokan barang ke supplier ketika stok mendekati batas minimum.</div>
+            <table class="dict-table">
+              <tr><th>Kolom</th><th>Tipe Data</th><th>Keterangan</th></tr>
+              <tr><td>po_number</td><td>varchar(50)</td><td><span class="key-badge key-uq">UNIQUE</span> Nomor PO</td></tr>
+              <tr><td>supplier_id</td><td>bigint</td><td><span class="key-badge key-fk">FK</span> -> suppliers.id</td></tr>
+              <tr><td>warehouse_id</td><td>bigint</td><td><span class="key-badge key-fk">FK</span> -> warehouses.id</td></tr>
+              <tr><td>status</td><td>enum(...)</td><td>draft, proposed, sent_to_supplier, goods_received</td></tr>
+              <tr><td>created_by</td><td>bigint</td><td><span class="key-badge key-fk">FK</span> -> users.id</td></tr>
+            </table>
+          </div>
+
+          <div class="dict-card">
+            <div class="dict-title">goods_receipts <span class="key-badge key-pk">PK: id</span></div>
+            <div class="dict-desc">Tanda terima fisik ketika truk kiriman pemasok dibongkar dan dihitung di gudang.</div>
+            <table class="dict-table">
+              <tr><th>Kolom</th><th>Tipe Data</th><th>Keterangan</th></tr>
+              <tr><td>gr_number</td><td>varchar(50)</td><td><span class="key-badge key-uq">UNIQUE</span> Nomor GR</td></tr>
+              <tr><td>purchase_order_id</td><td>bigint</td><td><span class="key-badge key-fk">FK</span> -> purchase_orders.id</td></tr>
+              <tr><td>warehouse_id</td><td>bigint</td><td><span class="key-badge key-fk">FK</span> -> warehouses.id</td></tr>
+              <tr><td>received_by</td><td>bigint</td><td><span class="key-badge key-fk">FK</span> -> users.id (Gudang)</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODUL 3: MASTER DATA -->
+    <div id="mod-master" class="module-erd-block">
+      <div class="diagram-panel">
+        <h3>📦 ERD Modul Master Data &amp; Lokasi Multigudang</h3>
+        <p>Pondasi utama katalog barang, kategori, lokasi gudang, dan penugasan staf:</p>
+        <div class="mermaid-viewport">
+          <div class="mermaid">
+erDiagram
+    CATEGORIES ||--o{ PRODUCTS : "mengelompokkan"
+    WAREHOUSES ||--o{ USERS : "menugaskan_staf"
+    WAREHOUSES ||--o{ INVENTORY_STOCKS : "menyimpan"
+    PRODUCTS ||--o{ INVENTORY_STOCKS : "ditempatkan_di"
+          </div>
+        </div>
+
+        <div class="dictionary-grid">
+          <div class="dict-card">
+            <div class="dict-title">products <span class="key-badge key-pk">PK: id</span></div>
+            <div class="dict-desc">Master katalog produk dengan SKU unik, harga jual, harga modal beli, dan batas minimum stok.</div>
+            <table class="dict-table">
+              <tr><th>Kolom</th><th>Tipe Data</th><th>Keterangan</th></tr>
+              <tr><td>sku</td><td>varchar(50)</td><td><span class="key-badge key-uq">UNIQUE</span> Kode SKU</td></tr>
+              <tr><td>name</td><td>varchar(150)</td><td>Nama produk</td></tr>
+              <tr><td>category_id</td><td>bigint</td><td><span class="key-badge key-fk">FK</span> -> categories.id</td></tr>
+              <tr><td>purchase_price</td><td>decimal(15,2)</td><td>Harga modal beli</td></tr>
+              <tr><td>selling_price</td><td>decimal(15,2)</td><td>Harga jual resmi</td></tr>
+              <tr><td>min_stock_threshold</td><td>int</td><td>Alarm stok kritis</td></tr>
+            </table>
+          </div>
+
+          <div class="dict-card">
+            <div class="dict-title">warehouses <span class="key-badge key-pk">PK: id</span></div>
+            <div class="dict-desc">Daftar lokasi gudang penyimpanan fisik (Jakarta, Surabaya, Bandung).</div>
+            <table class="dict-table">
+              <tr><th>Kolom</th><th>Tipe Data</th><th>Keterangan</th></tr>
+              <tr><td>code</td><td>varchar(20)</td><td><span class="key-badge key-uq">UNIQUE</span> Kode Gudang</td></tr>
+              <tr><td>name</td><td>varchar(100)</td><td>Nama gudang</td></tr>
+              <tr><td>city</td><td>varchar(50)</td><td>Kota lokasi</td></tr>
+              <tr><td>is_active</td><td>tinyint(1)</td><td>Status operasional</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODUL 4: STOCK & LEDGER -->
+    <div id="mod-stock" class="module-erd-block">
+      <div class="diagram-panel">
+        <h3>📜 ERD Modul Saldo Realtime &amp; Audit Trail Ledger</h3>
+        <p>Buku besar mutasi kartu stok abadi dan saldo stok fisik per gudang:</p>
+        <div class="mermaid-viewport">
+          <div class="mermaid">
+erDiagram
+    WAREHOUSES ||--o{ INVENTORY_STOCKS : "lokasi_stok"
+    PRODUCTS ||--o{ INVENTORY_STOCKS : "saldo_produk"
+
+    WAREHOUSES ||--o{ STOCK_LEDGER : "lokasi_kejadian"
+    PRODUCTS ||--o{ STOCK_LEDGER : "barang_mutasi"
+    USERS ||--o{ STOCK_LEDGER : "pelaksana_transaksi"
+          </div>
+        </div>
+
+        <div class="dictionary-grid">
+          <div class="dict-card">
+            <div class="dict-title">inventory_stocks <span class="key-badge key-pk">PK: id</span></div>
+            <div class="dict-desc">Saldo cepat multigudang per kombinasi unik (warehouse_id, product_id).</div>
+            <table class="dict-table">
+              <tr><th>Kolom</th><th>Tipe Data</th><th>Keterangan</th></tr>
+              <tr><td>warehouse_id</td><td>bigint</td><td><span class="key-badge key-fk">FK</span> Gudang</td></tr>
+              <tr><td>product_id</td><td>bigint</td><td><span class="key-badge key-fk">FK</span> Produk</td></tr>
+              <tr><td>quantity_on_hand</td><td>int</td><td>Stok fisik di rak saat ini</td></tr>
+              <tr><td>quantity_reserved</td><td>int</td><td>Stok terkunci pesanan SO</td></tr>
+              <tr><td>quantity_incoming</td><td>int</td><td>Stok dipesan via PO</td></tr>
+            </table>
+          </div>
+
+          <div class="dict-card">
+            <div class="dict-title">stock_ledger <span class="key-badge key-pk">PK: id</span></div>
+            <div class="dict-desc">Buku besar mutasi kartu stok. Bersifat Append-Only (Anti-manipulasi &amp; Jejak Hukum).</div>
+            <table class="dict-table">
+              <tr><th>Kolom</th><th>Tipe Data</th><th>Keterangan</th></tr>
+              <tr><td>movement_type</td><td>enum(...)</td><td>RECEIPT, ISSUE, TRANSFER, ADJUSTMENT</td></tr>
+              <tr><td>quantity_delta</td><td>int</td><td>Perubahan (+/-) kuantitas</td></tr>
+              <tr><td>balance_after</td><td>int</td><td>Saldo setelah mutasi</td></tr>
+              <tr><td>reference_doc_number</td><td>varchar(50)</td><td>Nomor dokumen PO / SO</td></tr>
+              <tr><td>user_id</td><td>bigint</td><td><span class="key-badge key-fk">FK</span> -> users.id pelaksana</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODUL 5: ALL RELATIONS -->
+    <div id="mod-all" class="module-erd-block">
+      <div class="diagram-panel">
+        <h3>🌐 Ikhtisar Seluruh Relasi Utama Antar Tabel</h3>
+        <p>Peta menyeluruh koneksi antar seluruh entitas sistem:</p>
+        <div class="mermaid-viewport">
+          <div class="mermaid">
+flowchart LR
+    classDef mTable fill:#1e293b,stroke:#38bdf8,stroke-width:1.5px,color:#f8fafc;
+    classDef tTable fill:#0f172a,stroke:#c084fc,stroke-width:1.5px,color:#f8fafc;
+    classDef sTable fill:#1e293b,stroke:#fbbf24,stroke-width:2px,color:#f8fafc;
+
+    CAT[categories]:::mTable --> PROD[products]:::mTable
+    WH[warehouses]:::mTable --> USR[users]:::mTable
+    
+    CUST[customers]:::mTable --> SO[sales_orders]:::tTable
+    WH --> SO
+    USR --> SO
+    SO --> SOI[sales_order_items]:::tTable
+    PROD --> SOI
+    SO --> GI[goods_issues]:::tTable
+    GI --> GII[goods_issue_items]:::tTable
+    PROD --> GII
+
+    SUPP[suppliers]:::mTable --> PO[purchase_orders]:::tTable
+    WH --> PO
+    USR --> PO
+    PO --> POI[purchase_order_items]:::tTable
+    PROD --> POI
+    PO --> GR[goods_receipts]:::tTable
+    GR --> GRI[goods_receipt_items]:::tTable
+    PROD --> GRI
+
+    WH --> STK[inventory_stocks]:::sTable
+    PROD --> STK
+
+    WH --> LEDG[stock_ledger]:::sTable
+    PROD --> LEDG
+    USR --> LEDG
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        darkMode: true,
+        background: '#090e17',
+        primaryColor: '#1e293b',
+        primaryTextColor: '#f8fafc',
+        primaryBorderColor: '#38bdf8',
+        lineColor: '#64748b'
+      }
+    });
+
+    function switchMainTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.view-content').forEach(c => c.classList.remove('active'));
+
+      if (tab === 'pyramid') {
+        document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+        document.getElementById('view-pyramid').classList.add('active');
+      } else {
+        document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+        document.getElementById('view-classic').classList.add('active');
+      }
+    }
+
+    function switchModule(modId) {
+      document.querySelectorAll('.mod-filter-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.module-erd-block').forEach(m => m.classList.remove('active'));
+
+      const activeBtn = (typeof event !== 'undefined' && event && event.currentTarget) ? event.currentTarget : null;
+      if (activeBtn) activeBtn.classList.add('active');
+      const targetBlock = document.getElementById(modId);
+      if (targetBlock) {
+        targetBlock.classList.add('active');
+      }
+    }
+  </script>
+</body>
+</html>
